@@ -2,14 +2,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { User, Report, Department, UserRole } from './types';
 import { DEPARTMENTS } from './constants';
-import { LogIn, LayoutDashboard, FileText, Settings, LogOut, Building2, UserCircle, Menu, X, RefreshCw, CloudCheck, AlertTriangle, CloudOff } from 'lucide-react';
+// Added FileCheck to the imports to resolve 'Cannot find name FileCheck' error
+import { LogIn, LayoutDashboard, FileText, FileCheck, Settings, LogOut, Building2, UserCircle, Menu, X, RefreshCw, CloudCheck, AlertTriangle, CloudOff } from 'lucide-react';
 import AdminDashboard from './components/AdminDashboard';
 import DeptReportWorkflow from './components/DeptReportWorkflow';
 import LoginForm from './components/LoginForm';
+import PastReports from './components/PastReports';
+import UserSettings from './components/UserSettings';
 
 // Netlify Function Path
 const API_BASE = '/.netlify/functions/api';
 const LOCAL_STORAGE_KEY = 'fmsc_reports_data';
+
+type TabType = 'dashboard' | 'reports' | 'settings';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -19,7 +24,7 @@ const App: React.FC = () => {
   const [isOffline, setIsOffline] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'reports'>('dashboard');
+  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
 
   // Load Initial Data
   useEffect(() => {
@@ -45,7 +50,6 @@ const App: React.FC = () => {
           }
           setIsOffline(false);
         } else if (res.status === 404) {
-          // If 404, we are likely not in a Netlify environment
           console.warn("Netlify Functions not found. Running in Local-Only mode.");
           setIsOffline(true);
         }
@@ -68,6 +72,7 @@ const App: React.FC = () => {
   const handleLogout = () => {
     setCurrentUser(null);
     localStorage.removeItem('fmsc_user');
+    setActiveTab('dashboard');
   };
 
   const updateReports = useCallback(async (updatedReports: Report[]) => {
@@ -119,6 +124,23 @@ const App: React.FC = () => {
 
   const isAdmin = currentUser.role === 'ADMIN';
 
+  const renderContent = () => {
+    switch(activeTab) {
+      case 'dashboard':
+        return isAdmin ? (
+          <AdminDashboard reports={reports} onUpdateReports={updateReports} user={currentUser} />
+        ) : (
+          <DeptReportWorkflow reports={reports} onUpdateReports={updateReports} user={currentUser} />
+        );
+      case 'reports':
+        return <PastReports reports={reports} user={currentUser} />;
+      case 'settings':
+        return <UserSettings user={currentUser} onLogout={handleLogout} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="min-h-screen flex bg-slate-50">
       {/* Mobile Sidebar Backdrop */}
@@ -156,7 +178,8 @@ const App: React.FC = () => {
               <Menu size={20} />
             </button>
             <h1 className="font-bold text-slate-800 text-lg lg:text-xl truncate tracking-tight">
-              {isAdmin ? 'Admin Control' : 'Department Portal'}
+              {activeTab === 'dashboard' ? (isAdmin ? 'Admin Control' : 'Department Portal') : 
+               activeTab === 'reports' ? 'Records Archive' : 'System Settings'}
             </h1>
           </div>
           
@@ -187,7 +210,7 @@ const App: React.FC = () => {
             
             <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block"></div>
 
-            <div className="flex items-center gap-3 pl-2">
+            <div className="flex items-center gap-3 pl-2 cursor-pointer" onClick={() => setActiveTab('settings')}>
               <div className="hidden md:flex flex-col items-end">
                 <span className="text-sm font-bold text-slate-900 leading-none mb-1">{currentUser.name}</span>
                 <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
@@ -202,29 +225,7 @@ const App: React.FC = () => {
         </header>
 
         <div className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full">
-          {activeTab === 'dashboard' ? (
-            isAdmin ? (
-              <AdminDashboard 
-                reports={reports} 
-                onUpdateReports={updateReports} 
-                user={currentUser} 
-              />
-            ) : (
-              <DeptReportWorkflow 
-                reports={reports} 
-                onUpdateReports={updateReports} 
-                user={currentUser} 
-              />
-            )
-          ) : (
-            <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-200 text-center text-slate-400">
-              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FileText size={40} className="opacity-20" />
-              </div>
-              <h2 className="text-xl font-bold text-slate-800 mb-2">Historical Records</h2>
-              <p className="max-w-xs mx-auto">This module is currently under development. You will soon be able to view and export past reporting cycles.</p>
-            </div>
-          )}
+          {renderContent()}
         </div>
       </main>
     </div>
@@ -233,8 +234,8 @@ const App: React.FC = () => {
 
 interface SidebarProps {
   user: User;
-  activeTab: string;
-  setActiveTab: (tab: 'dashboard' | 'reports') => void;
+  activeTab: TabType;
+  setActiveTab: (tab: TabType) => void;
   onLogout: () => void;
   onClose?: () => void;
 }
@@ -243,7 +244,7 @@ const SidebarContent: React.FC<SidebarProps> = ({ user, activeTab, setActiveTab,
   return (
     <>
       <div className="p-8 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setActiveTab('dashboard'); onClose?.(); }}>
           <div className="bg-maroon-800 p-2.5 rounded-xl shadow-lg shadow-maroon-100">
             <Building2 className="text-white" size={24} />
           </div>
@@ -267,7 +268,7 @@ const SidebarContent: React.FC<SidebarProps> = ({ user, activeTab, setActiveTab,
           onClick={() => { setActiveTab('dashboard'); onClose?.(); }} 
         />
         <SidebarLink 
-          icon={<FileText size={20} />} 
+          icon={<FileCheck size={20} />} 
           label="Past Reports" 
           active={activeTab === 'reports'} 
           onClick={() => { setActiveTab('reports'); onClose?.(); }} 
@@ -280,8 +281,8 @@ const SidebarContent: React.FC<SidebarProps> = ({ user, activeTab, setActiveTab,
         <SidebarLink 
           icon={<Settings size={20} />} 
           label="User Settings" 
-          active={false} 
-          onClick={() => { onClose?.(); }} 
+          active={activeTab === 'settings'} 
+          onClick={() => { setActiveTab('settings'); onClose?.(); }} 
         />
       </nav>
 
