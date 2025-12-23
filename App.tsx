@@ -25,15 +25,20 @@ const App: React.FC = () => {
 
     const fetchReports = async () => {
       try {
-        const res = await fetch(`${API_BASE}/reports`);
+        const res = await fetch(API_BASE);
         if (res.ok) {
           const data = await res.json();
           setReports(data || []);
         } else {
-          console.error("Server returned error:", await res.text());
+          const errorText = await res.text();
+          console.error("API Error:", res.status, errorText);
+          if (res.status === 404) {
+            setSyncError("API not found. Ensure Netlify Functions are running.");
+          }
         }
       } catch (err) {
-        console.error("Failed to load reports from DB. Are you running in a Netlify environment?", err);
+        console.error("Connection error. Ensure 'netlify dev' is running locally:", err);
+        setSyncError("Cloud connection failed.");
       } finally {
         setIsLoading(false);
       }
@@ -52,9 +57,7 @@ const App: React.FC = () => {
     localStorage.removeItem('fmsc_user');
   };
 
-  // Improved sync logic: Detects which report actually changed and saves it
   const updateReports = useCallback(async (updatedReports: Report[]) => {
-    // 1. Find the report that was modified by comparing with current state
     const modifiedReport = updatedReports.find((updated) => {
       const original = reports.find(r => r.id === updated.id);
       return !original || JSON.stringify(original) !== JSON.stringify(updated);
@@ -66,7 +69,7 @@ const App: React.FC = () => {
       setIsSyncing(true);
       setSyncError(null);
       try {
-        const response = await fetch(`${API_BASE}/reports`, {
+        const response = await fetch(API_BASE, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(modifiedReport)
@@ -77,7 +80,7 @@ const App: React.FC = () => {
         }
       } catch (err: any) {
         console.error("Sync failed:", err);
-        setSyncError("Failed to save. Check connection.");
+        setSyncError("Save failed. Connection error.");
       } finally {
         setTimeout(() => setIsSyncing(false), 500);
       }
@@ -103,7 +106,6 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex bg-slate-50">
-      {/* Sidebar - Mobile Toggle */}
       <div className={`fixed inset-0 z-50 lg:hidden ${isSidebarOpen ? 'block' : 'hidden'}`}>
         <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
         <div className="absolute top-0 left-0 h-full w-64 bg-white shadow-xl flex flex-col">
@@ -117,7 +119,6 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* Sidebar - Desktop */}
       <aside className="hidden lg:flex w-64 flex-col bg-white border-r border-slate-200 sticky top-0 h-screen">
         <SidebarContent 
           user={currentUser} 
@@ -127,7 +128,6 @@ const App: React.FC = () => {
         />
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
         <header className="h-16 bg-white border-b border-slate-200 px-4 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-3">
@@ -146,17 +146,17 @@ const App: React.FC = () => {
             {isSyncing ? (
               <div className="flex items-center gap-2 text-maroon-800 text-xs font-bold animate-pulse">
                 <RefreshCw size={14} className="animate-spin" />
-                <span>Saving to Cloud...</span>
+                <span>Saving...</span>
               </div>
             ) : syncError ? (
               <div className="flex items-center gap-2 text-rose-600 text-xs font-bold">
                 <AlertTriangle size={14} />
-                <span>{syncError}</span>
+                <span className="hidden sm:inline">{syncError}</span>
               </div>
             ) : (
               <div className="flex items-center gap-2 text-emerald-600 text-xs font-bold opacity-60">
                 <CloudCheck size={14} />
-                <span>Synchronized</span>
+                <span>Sync Active</span>
               </div>
             )}
             

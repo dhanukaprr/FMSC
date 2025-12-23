@@ -10,9 +10,9 @@ export const handler: Handler = async (event) => {
 
   try {
     await client.connect();
-    const { httpMethod, path, body } = event;
+    const { httpMethod, body } = event;
 
-    // GET /reports
+    // Handle Fetching (GET)
     if (httpMethod === 'GET') {
       const reportsRes = await client.query('SELECT * FROM reports ORDER BY period DESC');
       const entriesRes = await client.query('SELECT * FROM report_entries');
@@ -48,7 +48,7 @@ export const handler: Handler = async (event) => {
       };
     }
 
-    // POST /reports (Upsert)
+    // Handle Saving (POST)
     if (httpMethod === 'POST') {
       const report = JSON.parse(body || '{}');
       
@@ -56,7 +56,6 @@ export const handler: Handler = async (event) => {
         return { statusCode: 400, body: 'Missing report ID' };
       }
 
-      // Upsert the main Report
       await client.query(`
         INSERT INTO reports (id, department_id, period, status, created_by, submitted_at, selected_goals)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -74,7 +73,6 @@ export const handler: Handler = async (event) => {
         report.selectedGoals || []
       ]);
 
-      // Handle Entries: Clean existing for this report and replace
       await client.query('DELETE FROM report_entries WHERE report_id = $1', [report.id]);
       
       if (report.entries && report.entries.length > 0) {
@@ -105,7 +103,7 @@ export const handler: Handler = async (event) => {
       };
     }
 
-    return { statusCode: 404, body: 'Not Found' };
+    return { statusCode: 405, body: 'Method Not Allowed' };
   } catch (err: any) {
     console.error("Database Error:", err);
     return { 
