@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { User, Report, Department, UserRole } from './types';
 import { DEPARTMENTS } from './constants';
-import { LogIn, LayoutDashboard, FileText, Settings, LogOut, Building2, UserCircle, Menu, X, RefreshCw, CloudCheck } from 'lucide-react';
+import { LogIn, LayoutDashboard, FileText, Settings, LogOut, Building2, UserCircle, Menu, X, RefreshCw, CloudCheck, AlertTriangle } from 'lucide-react';
 import AdminDashboard from './components/AdminDashboard';
 import DeptReportWorkflow from './components/DeptReportWorkflow';
 import LoginForm from './components/LoginForm';
@@ -14,6 +14,7 @@ const App: React.FC = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'reports'>('dashboard');
 
@@ -27,10 +28,12 @@ const App: React.FC = () => {
         const res = await fetch(`${API_BASE}/reports`);
         if (res.ok) {
           const data = await res.json();
-          setReports(data);
+          setReports(data || []);
+        } else {
+          console.error("Server returned error:", await res.text());
         }
       } catch (err) {
-        console.error("Failed to load reports from DB:", err);
+        console.error("Failed to load reports from DB. Are you running in a Netlify environment?", err);
       } finally {
         setIsLoading(false);
       }
@@ -49,28 +52,37 @@ const App: React.FC = () => {
     localStorage.removeItem('fmsc_user');
   };
 
+  // Improved sync logic: Detects which report actually changed and saves it
   const updateReports = useCallback(async (updatedReports: Report[]) => {
+    // 1. Find the report that was modified by comparing with current state
+    const modifiedReport = updatedReports.find((updated) => {
+      const original = reports.find(r => r.id === updated.id);
+      return !original || JSON.stringify(original) !== JSON.stringify(updated);
+    });
+
     setReports(updatedReports);
     
-    // Find the report that was actually changed to sync it
-    // In a real app, we might only sync the specific report object
-    setIsSyncing(true);
-    try {
-      // For this simplified logic, we find the "active" or "newest" report to sync
-      // Ideally, the components would trigger individual syncs
-      const latestReport = updatedReports[updatedReports.length - 1];
-      if (latestReport) {
-        await fetch(`${API_BASE}/reports`, {
+    if (modifiedReport) {
+      setIsSyncing(true);
+      setSyncError(null);
+      try {
+        const response = await fetch(`${API_BASE}/reports`, {
           method: 'POST',
-          body: JSON.stringify(latestReport)
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(modifiedReport)
         });
+
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+      } catch (err: any) {
+        console.error("Sync failed:", err);
+        setSyncError("Failed to save. Check connection.");
+      } finally {
+        setTimeout(() => setIsSyncing(false), 500);
       }
-    } catch (err) {
-      console.error("Sync failed:", err);
-    } finally {
-      setTimeout(() => setIsSyncing(false), 500);
     }
-  }, []);
+  }, [reports]);
 
   if (isLoading) {
     return (
@@ -135,6 +147,11 @@ const App: React.FC = () => {
               <div className="flex items-center gap-2 text-maroon-800 text-xs font-bold animate-pulse">
                 <RefreshCw size={14} className="animate-spin" />
                 <span>Saving to Cloud...</span>
+              </div>
+            ) : syncError ? (
+              <div className="flex items-center gap-2 text-rose-600 text-xs font-bold">
+                <AlertTriangle size={14} />
+                <span>{syncError}</span>
               </div>
             ) : (
               <div className="flex items-center gap-2 text-emerald-600 text-xs font-bold opacity-60">
