@@ -2,7 +2,8 @@
 import React, { useState, useMemo } from 'react';
 import { Report, Department, User, ReportStatus } from '../types';
 import { DEPARTMENTS, GOALS, SUB_OBJECTIVES } from '../constants';
-import { BarChart3, Users, FileCheck, Clock, Search, Filter, Download, ChevronRight, Eye, RefreshCw, CheckCircle2, AlertCircle, Calendar } from 'lucide-react';
+// Added X to the imports from lucide-react
+import { BarChart3, Users, FileCheck, Clock, Search, Filter, Download, ChevronRight, Eye, RefreshCw, CheckCircle2, AlertCircle, Calendar, X } from 'lucide-react';
 
 interface Props {
   user: User;
@@ -53,7 +54,7 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
       {/* Header & Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
-          icon={<Users className="text-indigo-600" size={24} />} 
+          icon={<Users className="text-maroon-800" size={24} />} 
           label="Total Departments" 
           value={stats.total.toString()} 
         />
@@ -84,7 +85,7 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
               type="month" 
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+              className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-maroon-800 outline-none"
             />
           </div>
           <div className="relative">
@@ -92,7 +93,7 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
             <select 
               value={selectedDept}
               onChange={(e) => setSelectedDept(e.target.value)}
-              className="pl-10 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
+              className="pl-10 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-maroon-800 outline-none appearance-none"
             >
               <option value="all">All Departments</option>
               {DEPARTMENTS.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
@@ -101,7 +102,7 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
         </div>
         <button 
           onClick={exportAll}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+          className="flex items-center gap-2 px-4 py-2 bg-maroon-800 text-white text-sm font-bold rounded-lg hover:bg-maroon-900 transition-all shadow-lg shadow-maroon-100"
         >
           <Download size={16} />
           Export Month Data
@@ -154,7 +155,7 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
                       {report ? (
                         <button 
                           onClick={() => setViewingReportId(report.id)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-600 hover:text-white transition-all"
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-maroon-800 bg-maroon-50 rounded-lg hover:bg-maroon-800 hover:text-white transition-all"
                         >
                           <Eye size={14} />
                           View
@@ -197,7 +198,7 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
                   onClick={() => setViewingReportId(null)}
                   className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full"
                 >
-                  <ChevronRight size={24} />
+                  <X size={24} />
                 </button>
               </div>
             </div>
@@ -213,7 +214,7 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
                 return (
                   <div key={goalId} className="space-y-6">
                     <h4 className="text-lg font-bold text-slate-900 flex items-center gap-3 pb-2 border-b border-slate-100">
-                      <span className="bg-indigo-600 text-white px-2 py-0.5 rounded text-sm">Goal {goal?.code}</span>
+                      <span className="bg-maroon-800 text-white px-2 py-0.5 rounded text-sm">Goal {goal?.code}</span>
                       {goal?.title}
                     </h4>
                     
@@ -224,13 +225,13 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
                           <div key={entry.id} className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
                             <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
                               <div className="space-y-1">
-                                <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider">{sub?.code}</p>
+                                <p className="text-xs font-bold text-maroon-800 uppercase tracking-wider">{sub?.code}</p>
                                 <h5 className="font-bold text-slate-800">{sub?.title}</h5>
                               </div>
                               <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                                 entry.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' :
                                 entry.status === 'Delayed' ? 'bg-rose-100 text-rose-700' :
-                                'bg-indigo-100 text-indigo-700'
+                                'bg-maroon-100 text-maroon-800'
                               }`}>
                                 {entry.status}
                               </span>
@@ -258,7 +259,7 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
                                 <div>
                                   <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Evidence</p>
                                   {entry.evidenceUrl ? (
-                                    <a href={entry.evidenceUrl} target="_blank" rel="noreferrer" className="text-sm text-indigo-600 font-bold hover:underline">Link</a>
+                                    <a href={entry.evidenceUrl} target="_blank" rel="noreferrer" className="text-sm text-maroon-800 font-bold hover:underline">Link</a>
                                   ) : (
                                     <p className="text-sm text-slate-300">None</p>
                                   )}
@@ -269,7 +270,7 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
                         );
                       })}
                       {entries.length === 0 && (
-                        <p className="text-sm text-slate-400 italic">No progress recorded for this goal.</p>
+                        <p className="text-sm text-slate-400 italic pl-4">No progress recorded for this goal.</p>
                       )}
                     </div>
                   </div>

@@ -30,7 +30,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Visual Side */}
-      <div className="hidden lg:flex lg:w-1/2 bg-indigo-700 relative overflow-hidden flex-col justify-center p-12 text-white">
+      <div className="hidden lg:flex lg:w-1/2 bg-maroon-800 relative overflow-hidden flex-col justify-center p-12 text-white">
         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
           <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
             <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
@@ -44,18 +44,18 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
             <Building2 size={32} />
           </div>
           <h1 className="text-5xl font-bold mb-6 leading-tight">Corporate Plan <br/>Progress Tracker</h1>
-          <p className="text-xl text-indigo-100 max-w-md">
+          <p className="text-xl text-maroon-50 max-w-md">
             Streamlining strategic reporting and accountability for the Faculty of Management Studies and Commerce.
           </p>
           <div className="mt-12 space-y-4">
             <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
-              <div className="w-10 h-10 rounded-full bg-indigo-400/20 flex items-center justify-center text-indigo-200">
+              <div className="w-10 h-10 rounded-full bg-maroon-400/20 flex items-center justify-center text-maroon-100">
                 <ChevronRight size={20} />
               </div>
               <p className="text-sm">Real-time progress monitoring against 7 strategic goals.</p>
             </div>
             <div className="flex items-center gap-4 bg-white/5 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
-              <div className="w-10 h-10 rounded-full bg-indigo-400/20 flex items-center justify-center text-indigo-200">
+              <div className="w-10 h-10 rounded-full bg-maroon-400/20 flex items-center justify-center text-maroon-100">
                 <ChevronRight size={20} />
               </div>
               <p className="text-sm">Department-specific sub-objective tracking and narrative reporting.</p>
@@ -78,7 +78,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
                 type="button"
                 onClick={() => setRole('DEPT_USER')}
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold transition-all ${
-                  role === 'DEPT_USER' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  role === 'DEPT_USER' ? 'bg-white text-maroon-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
                 <Building2 size={18} />
@@ -88,7 +88,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
                 type="button"
                 onClick={() => setRole('ADMIN')}
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold transition-all ${
-                  role === 'ADMIN' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  role === 'ADMIN' ? 'bg-white text-maroon-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
                 <UserIcon size={18} />
@@ -106,7 +106,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
                     required 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-maroon-800 focus:border-transparent transition-all outline-none"
                     placeholder="name@university.ac.lk"
                   />
                 </div>
@@ -121,7 +121,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
                     required 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-maroon-800 focus:border-transparent transition-all outline-none"
                     placeholder="••••••••"
                   />
                 </div>
@@ -133,7 +133,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
                   <select 
                     value={departmentId}
                     onChange={(e) => setDepartmentId(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-maroon-800 transition-all outline-none"
                   >
                     {DEPARTMENTS.map(d => (
                       <option key={d.id} value={d.id}>{d.name}</option>
@@ -145,15 +145,15 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
 
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer group">
-                <input type="checkbox" className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
+                <input type="checkbox" className="w-4 h-4 rounded text-maroon-800 focus:ring-maroon-800" />
                 <span className="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">Remember me</span>
               </label>
-              <button type="button" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700">Forgot password?</button>
+              <button type="button" className="text-sm font-semibold text-maroon-800 hover:text-maroon-900">Forgot password?</button>
             </div>
 
             <button 
               type="submit"
-              className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-100 transition-all active:scale-[0.98]"
+              className="w-full py-3.5 bg-maroon-800 hover:bg-maroon-900 text-white font-bold rounded-xl shadow-lg shadow-maroon-100 transition-all active:scale-[0.98]"
             >
               Sign In
             </button>

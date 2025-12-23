@@ -98,18 +98,25 @@ const App: React.FC = () => {
         </header>
 
         <div className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full">
-          {isAdmin ? (
-            <AdminDashboard 
-              reports={reports} 
-              onUpdateReports={updateReports} 
-              user={currentUser} 
-            />
+          {activeTab === 'dashboard' ? (
+            isAdmin ? (
+              <AdminDashboard 
+                reports={reports} 
+                onUpdateReports={updateReports} 
+                user={currentUser} 
+              />
+            ) : (
+              <DeptReportWorkflow 
+                reports={reports} 
+                onUpdateReports={updateReports} 
+                user={currentUser} 
+              />
+            )
           ) : (
-            <DeptReportWorkflow 
-              reports={reports} 
-              onUpdateReports={updateReports} 
-              user={currentUser} 
-            />
+            <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-200 text-center text-slate-400">
+              <FileText size={48} className="mx-auto mb-4 opacity-20" />
+              <p>Historical Reports view coming soon...</p>
+            </div>
           )}
         </div>
       </main>
@@ -130,7 +137,7 @@ const SidebarContent: React.FC<SidebarProps> = ({ user, activeTab, setActiveTab,
     <>
       <div className="p-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="bg-indigo-600 p-2 rounded-lg">
+          <div className="bg-maroon-800 p-2 rounded-lg">
             <Building2 className="text-white" size={24} />
           </div>
           <span className="font-bold text-xl text-slate-900 tracking-tight">FMSC Tracker</span>
@@ -184,11 +191,13 @@ const SidebarLink: React.FC<{ icon: React.ReactNode; label: string; active: bool
     onClick={onClick}
     className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ${
       active 
-        ? 'bg-indigo-50 text-indigo-700 shadow-sm' 
+        ? 'bg-maroon-50 text-maroon-800 shadow-sm' 
         : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
     }`}
   >
-    {icon}
+    <div className={active ? 'text-maroon-800' : 'text-slate-400'}>
+      {icon}
+    </div>
     <span className="font-semibold">{label}</span>
   </button>
 );

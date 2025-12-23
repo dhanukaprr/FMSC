@@ -110,7 +110,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                 <input 
                   type="month" 
                   defaultValue={new Date().toISOString().slice(0, 7)}
-                  className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                  className="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-maroon-800 transition-all outline-none"
                   id="period-input"
                 />
                 <button 
@@ -118,7 +118,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                     const el = document.getElementById('period-input') as HTMLInputElement;
                     handleStartReport(el.value);
                   }}
-                  className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-indigo-100 transition-all"
+                  className="px-6 py-3 bg-maroon-800 hover:bg-maroon-900 text-white font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-maroon-100 transition-all"
                 >
                   Continue
                   <ChevronRight size={18} />
@@ -130,7 +130,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
 
         <div className="mt-12">
           <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <Clock size={20} className="text-indigo-600" />
+            <Clock size={20} className="text-maroon-800" />
             Recent Reports
           </h3>
           {reports.filter(r => r.departmentId === user.departmentId).length > 0 ? (
@@ -139,11 +139,11 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                 <button 
                   key={r.id} 
                   onClick={() => { setCurrentReportId(r.id); setStep(r.status === 'SUBMITTED' ? 'SUMMARY' : 'GOAL_SELECT'); }}
-                  className="bg-white p-5 rounded-xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all text-left flex flex-col group"
+                  className="bg-white p-5 rounded-xl border border-slate-200 hover:border-maroon-300 hover:shadow-md transition-all text-left flex flex-col group"
                 >
                   <div className="flex justify-between items-start mb-4">
-                    <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-indigo-50 transition-colors">
-                      <Calendar className="text-slate-400 group-hover:text-indigo-500" size={20} />
+                    <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-maroon-50 transition-colors">
+                      <Calendar className="text-slate-400 group-hover:text-maroon-800" size={20} />
                     </div>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                       r.status === 'SUBMITTED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
@@ -191,20 +191,20 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                 onClick={() => toggleGoal(goal.id)}
                 className={`p-6 rounded-2xl border-2 text-left transition-all h-full flex flex-col ${
                   isSelected 
-                    ? 'border-indigo-600 bg-indigo-50/50 shadow-sm' 
-                    : 'border-slate-200 bg-white hover:border-indigo-200'
+                    ? 'border-maroon-800 bg-maroon-50/50 shadow-sm' 
+                    : 'border-slate-200 bg-white hover:border-maroon-200'
                 }`}
               >
                 <div className={`w-10 h-10 rounded-xl mb-4 flex items-center justify-center transition-all ${
-                  isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'
+                  isSelected ? 'bg-maroon-800 text-white' : 'bg-slate-100 text-slate-400'
                 }`}>
                   <span className="font-bold">{goal.code}</span>
                 </div>
-                <h3 className={`font-bold leading-tight flex-1 ${isSelected ? 'text-indigo-900' : 'text-slate-700'}`}>
+                <h3 className={`font-bold leading-tight flex-1 ${isSelected ? 'text-maroon-950' : 'text-slate-700'}`}>
                   {goal.title}
                 </h3>
                 {isSelected && (
-                  <div className="mt-4 flex items-center gap-1.5 text-indigo-600 text-sm font-semibold">
+                  <div className="mt-4 flex items-center gap-1.5 text-maroon-800 text-sm font-semibold">
                     <CheckCircle2 size={16} />
                     Selected
                   </div>
@@ -218,7 +218,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
           <button
             disabled={!currentReport || currentReport.selectedGoals.length === 0}
             onClick={() => setStep('ENTRIES')}
-            className="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg shadow-indigo-100 flex items-center gap-2 transition-all active:scale-[0.98]"
+            className="px-8 py-3.5 bg-maroon-800 hover:bg-maroon-900 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg shadow-maroon-100 flex items-center gap-2 transition-all active:scale-[0.98]"
           >
             Continue to Entries
             <ChevronRight size={20} />
@@ -269,7 +269,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                 onClick={() => setSelectedGoalId(goal.id)}
                 className={`w-full p-4 rounded-xl text-left transition-all ${
                   (activeGoal?.id === goal.id)
-                    ? 'bg-indigo-600 text-white shadow-md' 
+                    ? 'bg-maroon-800 text-white shadow-md' 
                     : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
                 }`}
               >
@@ -282,7 +282,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
           <div className="flex-1 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                <div className="w-8 h-8 rounded bg-indigo-50 text-indigo-600 flex items-center justify-center text-xs">
+                <div className="w-8 h-8 rounded bg-maroon-50 text-maroon-800 flex items-center justify-center text-xs">
                   {activeGoal?.code}
                 </div>
                 {activeGoal?.title}
@@ -294,7 +294,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                   placeholder="Search sub-objectives..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm w-full md:w-64"
+                  className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-maroon-800 transition-all outline-none text-sm w-full md:w-64"
                 />
               </div>
             </div>
@@ -311,7 +311,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                       </div>
                       <button 
                         onClick={() => addEntry(so)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-600 hover:text-white transition-all ml-4 shrink-0"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-maroon-800 bg-maroon-50 rounded-lg hover:bg-maroon-800 hover:text-white transition-all ml-4 shrink-0"
                       >
                         <Plus size={14} />
                         Add Progress
@@ -319,7 +319,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                     </div>
 
                     {subEntries.length > 0 ? (
-                      <div className="grid gap-4 pl-4 border-l-2 border-indigo-100 ml-3">
+                      <div className="grid gap-4 pl-4 border-l-2 border-maroon-100 ml-3">
                         {subEntries.map(entry => (
                           <div key={entry.id} className="bg-slate-50 p-6 rounded-xl border border-slate-200 space-y-4 relative group/card">
                             <button 
@@ -336,7 +336,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                                   <select
                                     value={entry.status}
                                     onChange={(e) => updateEntry(entry.id, { status: e.target.value as EntryStatus })}
-                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-maroon-800 outline-none"
                                   >
                                     <option value="Not started">Not started</option>
                                     <option value="In progress">In progress</option>
@@ -351,7 +351,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                                     value={entry.narrative}
                                     onChange={(e) => updateEntry(entry.id, { narrative: e.target.value })}
                                     placeholder="Describe actions and results..."
-                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-maroon-800 outline-none resize-none"
                                   />
                                 </div>
                               </div>
@@ -363,7 +363,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                                     value={entry.metrics || ''}
                                     onChange={(e) => updateEntry(entry.id, { metrics: e.target.value })}
                                     placeholder="e.g. 2 workshops"
-                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-maroon-800 outline-none"
                                   />
                                 </div>
                                 <div>
@@ -374,7 +374,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                                       type="url" 
                                       value={entry.evidenceUrl || ''}
                                       onChange={(e) => updateEntry(entry.id, { evidenceUrl: e.target.value })}
-                                      className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                      className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-maroon-800 outline-none"
                                     />
                                   </div>
                                 </div>
@@ -410,7 +410,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
           {!isSubmitted && (
             <button 
               onClick={() => setStep('ENTRIES')}
-              className="flex items-center gap-2 px-4 py-2 text-indigo-600 font-bold hover:bg-indigo-50 rounded-lg transition-all"
+              className="flex items-center gap-2 px-4 py-2 text-maroon-800 font-bold hover:bg-maroon-50 rounded-lg transition-all"
             >
               <Edit3 size={18} />
               Edit Report
@@ -449,7 +449,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
               return (
                 <div key={goalId} className="space-y-4">
                   <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
-                    <span className="text-indigo-600">Goal {goal?.code}:</span> {goal?.title}
+                    <span className="text-maroon-800">Goal {goal?.code}:</span> {goal?.title}
                   </h3>
                   
                   {goalEntries.length > 0 ? (
@@ -465,7 +465,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
                                   entry.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' :
                                   entry.status === 'Delayed' ? 'bg-rose-50 text-rose-600' :
-                                  'bg-indigo-50 text-indigo-600'
+                                  'bg-maroon-50 text-maroon-800'
                                 }`}>
                                   {entry.status}
                                 </span>
@@ -474,7 +474,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                             <div className="md:col-span-2">
                               <p className="text-sm text-slate-600 italic">"{entry.narrative || 'No narrative provided.'}"</p>
                               {entry.metrics && (
-                                <p className="text-xs text-indigo-600 font-semibold mt-2">Metric: {entry.metrics}</p>
+                                <p className="text-xs text-maroon-800 font-semibold mt-2">Metric: {entry.metrics}</p>
                               )}
                             </div>
                             <div className="md:col-span-1 flex flex-col items-end justify-center">
@@ -483,7 +483,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                                   href={entry.evidenceUrl} 
                                   target="_blank" 
                                   rel="noopener noreferrer"
-                                  className="text-xs text-indigo-600 flex items-center gap-1 hover:underline"
+                                  className="text-xs text-maroon-800 flex items-center gap-1 hover:underline"
                                 >
                                   Evidence <ExternalLink size={12} />
                                 </a>
@@ -503,14 +503,14 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
         </div>
 
         {!isSubmitted ? (
-          <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-t-4 border-t-indigo-500">
+          <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-200 shadow-sm border-t-4 border-t-maroon-800">
             <div className="flex items-center gap-4 text-slate-500">
               <AlertCircle className="text-amber-500" size={24} />
               <p className="text-sm">Once submitted, this report will be locked for editing.</p>
             </div>
             <button 
               onClick={handleSubmit}
-              className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-100 flex items-center gap-2 transition-all active:scale-[0.98]"
+              className="px-8 py-3 bg-maroon-800 hover:bg-maroon-900 text-white font-bold rounded-xl shadow-lg shadow-maroon-100 flex items-center gap-2 transition-all active:scale-[0.98]"
             >
               Submit Monthly Report
               <Send size={18} />
