@@ -2,16 +2,35 @@ import { Handler } from '@netlify/functions';
 import { Client } from 'pg';
 
 export const handler: Handler = async (event) => {
-  // Netlify's Neon integration prefixes variables with NETLIFY_
-  const dbUrl = process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL || process.env.NETLIFY_DATABASE_URL_UNPOOLED;
+  // Priority order for environment variables
+  const dbUrl = 
+    process.env.NETLIFY_DATABASE_URL || 
+    process.env.NETLIFY_DATABASE_URL_UNPOOLED || 
+    process.env.DATABASE_URL;
+
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
+  };
+
+  // Handle preflight requests
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers };
+  }
 
   if (!dbUrl) {
     return { 
       statusCode: 500, 
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ 
         error: 'Database connection string is missing.',
-        help: 'We looked for DATABASE_URL, NETLIFY_DATABASE_URL, and NETLIFY_DATABASE_URL_UNPOOLED. Please check your Netlify environment variables.'
+        debug: {
+          checked: ['NETLIFY_DATABASE_URL', 'NETLIFY_DATABASE_URL_UNPOOLED', 'DATABASE_URL'],
+          foundKeys: Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('URL'))
+        },
+        help: 'Ensure your Neon integration is connected or manually set NETLIFY_DATABASE_URL in Netlify Site Settings.'
       }) 
     };
   }
@@ -30,10 +49,11 @@ export const handler: Handler = async (event) => {
       const dbRes = await client.query('SELECT NOW()');
       return {
         statusCode: 200,
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ 
           status: 'ok', 
-          message: 'Cloud connection verified.', 
+          message: 'Connected to Neon successfully.',
+          source: process.env.NETLIFY_DATABASE_URL ? 'NETLIFY_DATABASE_URL' : 'Fallback URL',
           time: dbRes.rows[0].now 
         })
       };
@@ -70,7 +90,7 @@ export const handler: Handler = async (event) => {
       
       return { 
         statusCode: 200, 
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(reports) 
       };
     }
@@ -80,7 +100,7 @@ export const handler: Handler = async (event) => {
       const report = JSON.parse(body || '{}');
       
       if (!report.id) {
-        return { statusCode: 400, body: 'Missing report ID' };
+        return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing report ID' }) };
       }
 
       await client.query(`
@@ -125,20 +145,20 @@ export const handler: Handler = async (event) => {
 
       return { 
         statusCode: 200, 
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ success: true }) 
       };
     }
 
-    return { statusCode: 405, body: 'Method Not Allowed' };
+    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
   } catch (err: any) {
     console.error("Database Error:", err);
     return { 
       statusCode: 500, 
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ 
-        error: err.message, 
-        detail: "Check database tables and connection strings." 
+        error: err.message,
+        hint: "Ensure the SQL schema has been applied in the Neon console."
       }) 
     };
   } finally {

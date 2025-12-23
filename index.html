@@ -25,4 +25,35 @@
               950: '#3b0d0d',
             }
           }
-        
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react-dom": "https://esm.sh/react-dom@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "@netlify/functions": "https://esm.sh/@netlify/functions@^5.1.2",
+    "pg": "https://esm.sh/pg@^8.16.3"
+  }
+}
+</script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div id="root">
+    <div class="flex items-center justify-center min-h-screen">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-maroon-800"></div>
+    </div>
+  </div>
+  <script type="module" src="index.tsx"></script>
+</body>
+</html>

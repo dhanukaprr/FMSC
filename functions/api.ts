@@ -1,18 +1,49 @@
-
 import { Handler } from '@netlify/functions';
 import { Client } from 'pg';
 
 export const handler: Handler = async (event) => {
+  const dbUrl = 
+    process.env.NETLIFY_DATABASE_URL || 
+    process.env.NETLIFY_DATABASE_URL_UNPOOLED || 
+    process.env.DATABASE_URL;
+
+  const headers = {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
+  };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers };
+  }
+
+  if (!dbUrl) {
+    return { 
+      statusCode: 500, 
+      headers,
+      body: JSON.stringify({ error: 'Database connection string is missing.' }) 
+    };
+  }
+
   const client = new Client({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: dbUrl,
     ssl: { rejectUnauthorized: false }
   });
 
   try {
     await client.connect();
-    const { httpMethod, body } = event;
+    const { httpMethod, body, queryStringParameters } = event;
 
-    // Handle Fetching (GET)
+    if (queryStringParameters?.test === 'true') {
+      const dbRes = await client.query('SELECT NOW()');
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ status: 'ok', time: dbRes.rows[0].now })
+      };
+    }
+
     if (httpMethod === 'GET') {
       const reportsRes = await client.query('SELECT * FROM reports ORDER BY period DESC');
       const entriesRes = await client.query('SELECT * FROM report_entries');
@@ -41,20 +72,12 @@ export const handler: Handler = async (event) => {
           }))
       }));
       
-      return { 
-        statusCode: 200, 
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(reports) 
-      };
+      return { statusCode: 200, headers, body: JSON.stringify(reports) };
     }
 
-    // Handle Saving (POST)
     if (httpMethod === 'POST') {
       const report = JSON.parse(body || '{}');
-      
-      if (!report.id) {
-        return { statusCode: 400, body: 'Missing report ID' };
-      }
+      if (!report.id) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing report ID' }) };
 
       await client.query(`
         INSERT INTO reports (id, department_id, period, status, created_by, submitted_at, selected_goals)
@@ -63,53 +86,25 @@ export const handler: Handler = async (event) => {
           status = EXCLUDED.status,
           submitted_at = EXCLUDED.submitted_at,
           selected_goals = EXCLUDED.selected_goals
-      `, [
-        report.id, 
-        report.departmentId, 
-        report.period, 
-        report.status, 
-        report.createdBy, 
-        report.submittedAt || null, 
-        report.selectedGoals || []
-      ]);
+      `, [report.id, report.departmentId, report.period, report.status, report.createdBy, report.submittedAt || null, report.selectedGoals || []]);
 
       await client.query('DELETE FROM report_entries WHERE report_id = $1', [report.id]);
       
       if (report.entries && report.entries.length > 0) {
         for (const entry of report.entries) {
           await client.query(`
-            INSERT INTO report_entries (
-              id, report_id, objective_id, status, narrative, metrics, challenges, support_needed, evidence_url
-            )
+            INSERT INTO report_entries (id, report_id, objective_id, status, narrative, metrics, challenges, support_needed, evidence_url)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-          `, [
-            entry.id, 
-            report.id, 
-            entry.objectiveId, 
-            entry.status, 
-            entry.narrative || null, 
-            entry.metrics || null, 
-            entry.challenges || null, 
-            entry.supportNeeded || null, 
-            entry.evidenceUrl || null
-          ]);
+          `, [entry.id, report.id, entry.objectiveId, entry.status, entry.narrative || null, entry.metrics || null, entry.challenges || null, entry.supportNeeded || null, entry.evidenceUrl || null]);
         }
       }
 
-      return { 
-        statusCode: 200, 
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ success: true }) 
-      };
+      return { statusCode: 200, headers, body: JSON.stringify({ success: true }) };
     }
 
-    return { statusCode: 405, body: 'Method Not Allowed' };
+    return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
   } catch (err: any) {
-    console.error("Database Error:", err);
-    return { 
-      statusCode: 500, 
-      body: JSON.stringify({ error: err.message }) 
-    };
+    return { statusCode: 500, headers, body: JSON.stringify({ error: err.message }) };
   } finally {
     await client.end();
   }
