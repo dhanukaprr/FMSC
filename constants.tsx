@@ -2,17 +2,20 @@
 import { Department, Goal, Objective } from './types';
 
 export const DEPARTMENTS: Department[] = [
-  { id: 'dept-1', name: 'Department of Accounting' },
-  { id: 'dept-2', name: 'Department of Business Administration' },
-  { id: 'dept-3', name: 'Department of Entrepreneurship' },
-  { id: 'dept-4', name: 'Department of Marketing' },
-  { id: 'dept-5', name: 'Department of Decision Sciences' },
-  { id: 'dept-6', name: 'Department of Business Economics' },
-  { id: 'dept-7', name: 'Department of Estate Management and Valuation' },
-  { id: 'dept-8', name: 'Department of Public Administration' },
-  { id: 'dept-9', name: 'Department of Information Technology' },
+  { id: 'dept-1', name: 'Business Communications Unit' },
+  { id: 'dept-2', name: 'Department of Accounting' },
+  { id: 'dept-3', name: 'Department of Business Administration' },
+  { id: 'dept-4', name: 'Department of Business Economics' },
+  { id: 'dept-5', name: 'Department of Commerce' },
+  { id: 'dept-6', name: 'Department of Decision Sciences' },
+  { id: 'dept-7', name: 'Department of Entrepreneurship' },
+  { id: 'dept-8', name: 'Department of Estate Management and Valuation' },
+  { id: 'dept-9', name: 'Department of Finance' },
   { id: 'dept-10', name: 'Department of Human Resource Management' },
-  { id: 'dept-11', name: 'Department of Finance' },
+  { id: 'dept-11', name: 'Department of Information Technology' },
+  { id: 'dept-12', name: 'Department of Marketing' },
+  { id: 'dept-13', name: 'Department of Public Administration' },
+  { id: 'dept-14', name: 'Legal Studies Unit' },
 ];
 
 export const GOALS: Goal[] = [
