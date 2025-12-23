@@ -3,6 +3,14 @@ import { Handler } from '@netlify/functions';
 import { Client } from 'pg';
 
 export const handler: Handler = async (event) => {
+  // Check if DATABASE_URL exists
+  if (!process.env.DATABASE_URL) {
+    return { 
+      statusCode: 500, 
+      body: JSON.stringify({ error: 'DATABASE_URL environment variable is missing.' }) 
+    };
+  }
+
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
@@ -10,7 +18,21 @@ export const handler: Handler = async (event) => {
 
   try {
     await client.connect();
-    const { httpMethod, body } = event;
+    const { httpMethod, body, queryStringParameters } = event;
+
+    // Health Check / Connection Test
+    if (queryStringParameters?.test === 'true') {
+      const dbRes = await client.query('SELECT NOW()');
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          status: 'ok', 
+          message: 'Connection successful', 
+          time: dbRes.rows[0].now 
+        })
+      };
+    }
 
     // Handle Fetching (GET)
     if (httpMethod === 'GET') {
@@ -70,7 +92,7 @@ export const handler: Handler = async (event) => {
         report.status, 
         report.createdBy, 
         report.submittedAt || null, 
-        report.selectedGoals || []
+        report.selected_goals || []
       ]);
 
       await client.query('DELETE FROM report_entries WHERE report_id = $1', [report.id]);
@@ -108,7 +130,8 @@ export const handler: Handler = async (event) => {
     console.error("Database Error:", err);
     return { 
       statusCode: 500, 
-      body: JSON.stringify({ error: err.message }) 
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: err.message, detail: "Ensure tables exist in Neon." }) 
     };
   } finally {
     await client.end();

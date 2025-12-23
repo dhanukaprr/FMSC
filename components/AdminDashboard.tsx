@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Report, Department, User, ReportStatus } from '../types';
 import { DEPARTMENTS, GOALS, OBJECTIVES } from '../constants';
-import { BarChart3, Users, FileCheck, Clock, Search, Filter, Download, ChevronRight, Eye, RefreshCw, CheckCircle2, AlertCircle, Calendar, X } from 'lucide-react';
+import { BarChart3, Users, FileCheck, Clock, Search, Filter, Download, ChevronRight, Eye, RefreshCw, CheckCircle2, AlertCircle, Calendar, X, Database, ShieldCheck, ShieldAlert } from 'lucide-react';
 
 interface Props {
   user: User;
@@ -14,6 +14,8 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [selectedDept, setSelectedDept] = useState<string>('all');
   const [viewingReportId, setViewingReportId] = useState<string | null>(null);
+  const [dbStatus, setDbStatus] = useState<'IDLE' | 'TESTING' | 'CONNECTED' | 'ERROR'>('IDLE');
+  const [dbMessage, setDbMessage] = useState<string>('');
 
   const stats = useMemo(() => {
     const periodReports = reports.filter(r => r.period === selectedMonth);
@@ -26,6 +28,23 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
     };
   }, [reports, selectedMonth]);
 
+  const testConnection = async () => {
+    setDbStatus('TESTING');
+    try {
+      const res = await fetch('/.netlify/functions/api?test=true');
+      const data = await res.json();
+      if (res.ok && data.status === 'ok') {
+        setDbStatus('CONNECTED');
+        setDbMessage('Successfully linked to Neon DB.');
+      } else {
+        throw new Error(data.error || 'Connection failed');
+      }
+    } catch (err: any) {
+      setDbStatus('ERROR');
+      setDbMessage(err.message || 'Check DATABASE_URL in Netlify.');
+    }
+  };
+
   const viewingReport = useMemo(() => {
     return reports.find(r => r.id === viewingReportId);
   }, [reports, viewingReportId]);
@@ -36,12 +55,38 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
     setViewingReportId(null);
   };
 
-  const exportAll = () => {
-    alert('Exporting aggregated data for ' + selectedMonth + ' to CSV...');
-  };
-
   return (
     <div className="space-y-8 animate-in fade-in">
+      {/* Database Diagnostic Card */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+            dbStatus === 'CONNECTED' ? 'bg-emerald-50 text-emerald-600' :
+            dbStatus === 'ERROR' ? 'bg-rose-50 text-rose-600' :
+            'bg-slate-50 text-slate-400'
+          }`}>
+            <Database size={20} />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cloud Infrastructure Status</p>
+            <p className="text-sm font-semibold text-slate-700">
+              {dbStatus === 'IDLE' && 'Database status unknown'}
+              {dbStatus === 'TESTING' && 'Connecting to Neon...'}
+              {dbStatus === 'CONNECTED' && dbMessage}
+              {dbStatus === 'ERROR' && dbMessage}
+            </p>
+          </div>
+        </div>
+        <button 
+          onClick={testConnection}
+          disabled={dbStatus === 'TESTING'}
+          className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all"
+        >
+          {dbStatus === 'TESTING' ? <RefreshCw size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
+          Test Connection
+        </button>
+      </div>
+
       {/* Header & Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard 
@@ -92,7 +137,7 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
           </div>
         </div>
         <button 
-          onClick={exportAll}
+          onClick={() => alert('Exporting aggregated data for ' + selectedMonth + ' to CSV...')}
           className="flex items-center gap-2 px-4 py-2 bg-maroon-800 text-white text-sm font-bold rounded-lg hover:bg-maroon-900 transition-all shadow-lg shadow-maroon-100"
         >
           <Download size={16} />
@@ -260,9 +305,6 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
                           </div>
                         );
                       })}
-                      {entries.length === 0 && (
-                        <p className="text-sm text-slate-400 italic pl-4">No progress recorded for this goal.</p>
-                      )}
                     </div>
                   </div>
                 );
