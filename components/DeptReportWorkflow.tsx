@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
-import { User, Report, Goal, SubObjective, ReportEntry, ReportStatus, EntryStatus } from '../types';
-import { GOALS, OBJECTIVES, SUB_OBJECTIVES, DEPARTMENTS } from '../constants';
+import { User, Report, Goal, Objective, ReportEntry, ReportStatus, EntryStatus } from '../types';
+import { GOALS, OBJECTIVES, DEPARTMENTS } from '../constants';
 import { Plus, Check, ChevronRight, ArrowLeft, Search, CheckCircle2, AlertCircle, Clock, Link as LinkIcon, FileCheck, Send, Calendar, ListChecks, Edit3, Trash2, ExternalLink } from 'lucide-react';
 
 interface Props {
@@ -57,12 +57,12 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
     updateCurrentReport({ selectedGoals: newGoals });
   };
 
-  const addEntry = (subObj: SubObjective) => {
+  const addEntry = (obj: Objective) => {
     if (!currentReport || currentReport.status === 'SUBMITTED') return;
     const newEntry: ReportEntry = {
       id: Math.random().toString(36).substr(2, 9),
       reportId: currentReport.id,
-      subObjectiveId: subObj.id,
+      objectiveId: obj.id,
       status: 'In progress',
       narrative: '',
       createdAt: new Date().toISOString()
@@ -152,7 +152,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                     </span>
                   </div>
                   <h4 className="font-bold text-slate-900 mb-1">{r.period}</h4>
-                  <p className="text-xs text-slate-500">{r.entries.length} progress entries recorded</p>
+                  <p className="text-xs text-slate-500">{r.entries.length} objectives recorded</p>
                 </button>
               ))}
             </div>
@@ -220,7 +220,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
             onClick={() => setStep('ENTRIES')}
             className="px-8 py-3.5 bg-maroon-800 hover:bg-maroon-900 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl shadow-lg shadow-maroon-100 flex items-center gap-2 transition-all active:scale-[0.98]"
           >
-            Continue to Entries
+            Continue to Objectives
             <ChevronRight size={20} />
           </button>
         </div>
@@ -234,9 +234,9 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
       ? GOALS.find(g => g.id === selectedGoalId) 
       : selectedGoalsList[0];
       
-    const filteredSubObjectives = SUB_OBJECTIVES.filter(so => 
-      so.goalId === activeGoal?.id && 
-      (searchTerm === '' || so.title.toLowerCase().includes(searchTerm.toLowerCase()) || so.code.includes(searchTerm))
+    const filteredObjectives = OBJECTIVES.filter(obj => 
+      obj.goalId === activeGoal?.id && 
+      (searchTerm === '' || obj.title.toLowerCase().includes(searchTerm.toLowerCase()) || obj.code.includes(searchTerm))
     );
 
     return (
@@ -249,7 +249,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
             >
               <ArrowLeft size={20} />
             </button>
-            <h2 className="text-xl font-bold text-slate-900">Progress Entries</h2>
+            <h2 className="text-xl font-bold text-slate-900">Objectives Tracking</h2>
           </div>
           <button
             onClick={() => setStep('SUMMARY')}
@@ -282,16 +282,16 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
           <div className="flex-1 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                <div className="w-8 h-8 rounded bg-maroon-50 text-maroon-800 flex items-center justify-center text-xs">
+                <div className="w-8 h-8 rounded bg-maroon-50 text-maroon-800 flex items-center justify-center text-xs shrink-0">
                   {activeGoal?.code}
                 </div>
-                {activeGoal?.title}
+                <span className="line-clamp-1">{activeGoal?.title}</span>
               </h3>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input 
                   type="text" 
-                  placeholder="Search sub-objectives..."
+                  placeholder="Search objectives..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-maroon-800 transition-all outline-none text-sm w-full md:w-64"
@@ -300,17 +300,17 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-8">
-              {filteredSubObjectives.map(so => {
-                const subEntries = currentReport?.entries.filter(e => e.subObjectiveId === so.id) || [];
+              {filteredObjectives.map(obj => {
+                const subEntries = currentReport?.entries.filter(e => e.objectiveId === obj.id) || [];
                 return (
-                  <div key={so.id} className="space-y-4">
+                  <div key={obj.id} className="space-y-4">
                     <div className="flex items-center justify-between group">
                       <div className="flex items-start gap-3">
-                        <span className="text-xs font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded mt-1">{so.code}</span>
-                        <h4 className="font-bold text-slate-700 flex-1">{so.title}</h4>
+                        <span className="text-xs font-bold px-2 py-1 bg-slate-100 text-slate-600 rounded mt-1">{obj.code}</span>
+                        <h4 className="font-bold text-slate-700 flex-1">{obj.title}</h4>
                       </div>
                       <button 
-                        onClick={() => addEntry(so)}
+                        onClick={() => addEntry(obj)}
                         className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-maroon-800 bg-maroon-50 rounded-lg hover:bg-maroon-800 hover:text-white transition-all ml-4 shrink-0"
                       >
                         <Plus size={14} />
@@ -350,7 +350,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                                     rows={3}
                                     value={entry.narrative}
                                     onChange={(e) => updateEntry(entry.id, { narrative: e.target.value })}
-                                    placeholder="Describe actions and results..."
+                                    placeholder="Describe actions taken and results achieved..."
                                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-maroon-800 outline-none resize-none"
                                   />
                                 </div>
@@ -362,7 +362,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                                     type="text" 
                                     value={entry.metrics || ''}
                                     onChange={(e) => updateEntry(entry.id, { metrics: e.target.value })}
-                                    placeholder="e.g. 2 workshops"
+                                    placeholder="e.g. 5 workshops conducted"
                                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-maroon-800 outline-none"
                                   />
                                 </div>
@@ -384,7 +384,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                         ))}
                       </div>
                     ) : (
-                      <div className="ml-10 text-xs text-slate-400 italic">No entries for this sub-objective yet.</div>
+                      <div className="ml-10 text-xs text-slate-400 italic">No progress recorded for this objective yet.</div>
                     )}
                   </div>
                 );
@@ -405,7 +405,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
         <div className="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
           <div>
             <h2 className="text-2xl font-bold text-slate-900">Report Summary</h2>
-            <p className="text-slate-500">Review your progress before final submission.</p>
+            <p className="text-slate-500">Review your monthly progress objectives before final submission.</p>
           </div>
           {!isSubmitted && (
             <button 
@@ -442,8 +442,8 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
             {currentReport.selectedGoals.map(goalId => {
               const goal = GOALS.find(g => g.id === goalId);
               const goalEntries = currentReport.entries.filter(e => {
-                const sub = SUB_OBJECTIVES.find(so => so.id === e.subObjectiveId);
-                return sub?.goalId === goalId;
+                const obj = OBJECTIVES.find(o => o.id === e.objectiveId);
+                return obj?.goalId === goalId;
               });
 
               return (
@@ -455,12 +455,12 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                   {goalEntries.length > 0 ? (
                     <div className="space-y-4">
                       {goalEntries.map(entry => {
-                        const sub = SUB_OBJECTIVES.find(so => so.id === entry.subObjectiveId);
+                        const obj = OBJECTIVES.find(o => o.id === entry.objectiveId);
                         return (
                           <div key={entry.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition-all">
                             <div className="md:col-span-1">
-                              <p className="text-xs font-bold text-slate-400 mb-1">{sub?.code}</p>
-                              <p className="text-sm font-bold text-slate-700 leading-tight">{sub?.title}</p>
+                              <p className="text-xs font-bold text-slate-400 mb-1">{obj?.code}</p>
+                              <p className="text-sm font-bold text-slate-700 leading-tight">{obj?.title}</p>
                               <div className="mt-2">
                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
                                   entry.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' :
@@ -494,7 +494,7 @@ const DeptReportWorkflow: React.FC<Props> = ({ user, reports, onUpdateReports })
                       })}
                     </div>
                   ) : (
-                    <p className="text-sm text-slate-400 italic pl-4">No progress entries for this goal.</p>
+                    <p className="text-sm text-slate-400 italic pl-4">No progress reported for this goal.</p>
                   )}
                 </div>
               );

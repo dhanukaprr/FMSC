@@ -27,14 +27,6 @@ export interface Objective {
   title: string;
 }
 
-export interface SubObjective {
-  id: string;
-  objectiveId: string;
-  goalId: string;
-  code: string;
-  title: string;
-}
-
 export type ReportStatus = 'DRAFT' | 'SUBMITTED' | 'REVISION_REQUESTED';
 
 export type EntryStatus = 'Not started' | 'In progress' | 'Completed' | 'Delayed';
@@ -42,7 +34,7 @@ export type EntryStatus = 'Not started' | 'In progress' | 'Completed' | 'Delayed
 export interface ReportEntry {
   id: string;
   reportId: string;
-  subObjectiveId: string;
+  objectiveId: string;
   status: EntryStatus;
   narrative: string;
   metrics?: string;

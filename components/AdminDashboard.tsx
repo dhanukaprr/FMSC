@@ -1,8 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Report, Department, User, ReportStatus } from '../types';
-import { DEPARTMENTS, GOALS, SUB_OBJECTIVES } from '../constants';
-// Added X to the imports from lucide-react
+import { DEPARTMENTS, GOALS, OBJECTIVES } from '../constants';
 import { BarChart3, Users, FileCheck, Clock, Search, Filter, Download, ChevronRight, Eye, RefreshCw, CheckCircle2, AlertCircle, Calendar, X } from 'lucide-react';
 
 interface Props {
@@ -26,14 +25,6 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
       submissionRate: Math.round((submitted / DEPARTMENTS.length) * 100) || 0
     };
   }, [reports, selectedMonth]);
-
-  const filteredReports = useMemo(() => {
-    return reports.filter(r => {
-      const matchMonth = r.period === selectedMonth;
-      const matchDept = selectedDept === 'all' || r.departmentId === selectedDept;
-      return matchMonth && matchDept;
-    });
-  }, [reports, selectedMonth, selectedDept]);
 
   const viewingReport = useMemo(() => {
     return reports.find(r => r.id === viewingReportId);
@@ -71,7 +62,7 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
         />
         <StatCard 
           icon={<BarChart3 className="text-rose-600" size={24} />} 
-          label="Total Entries" 
+          label="Total Items Reported" 
           value={reports.filter(r => r.period === selectedMonth).reduce((acc, curr) => acc + curr.entries.length, 0).toString()} 
         />
       </div>
@@ -118,7 +109,7 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Department</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Period</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Entries</th>
+                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Objectives</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -149,7 +140,7 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <p className="text-sm text-slate-600">{report?.entries.length || 0} items</p>
+                      <p className="text-sm text-slate-600">{report?.entries.length || 0} reported</p>
                     </td>
                     <td className="px-6 py-4">
                       {report ? (
@@ -172,7 +163,7 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
         </div>
       </div>
 
-      {/* Viewing Modal/Slide-over */}
+      {/* Viewing Modal */}
       {viewingReportId && viewingReport && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setViewingReportId(null)} />
@@ -182,7 +173,7 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
                 <h3 className="text-xl font-bold text-slate-900">
                   {DEPARTMENTS.find(d => d.id === viewingReport.departmentId)?.name}
                 </h3>
-                <p className="text-sm text-slate-500">Report for {viewingReport.period}</p>
+                <p className="text-sm text-slate-500">Progress Summary • {viewingReport.period}</p>
               </div>
               <div className="flex items-center gap-3">
                 {viewingReport.status === 'SUBMITTED' && (
@@ -207,26 +198,26 @@ const AdminDashboard: React.FC<Props> = ({ user, reports, onUpdateReports }) => 
               {viewingReport.selectedGoals.length > 0 ? viewingReport.selectedGoals.map(goalId => {
                 const goal = GOALS.find(g => g.id === goalId);
                 const entries = viewingReport.entries.filter(e => {
-                  const sub = SUB_OBJECTIVES.find(so => so.id === e.subObjectiveId);
-                  return sub?.goalId === goalId;
+                  const obj = OBJECTIVES.find(o => o.id === e.objectiveId);
+                  return obj?.goalId === goalId;
                 });
 
                 return (
                   <div key={goalId} className="space-y-6">
                     <h4 className="text-lg font-bold text-slate-900 flex items-center gap-3 pb-2 border-b border-slate-100">
-                      <span className="bg-maroon-800 text-white px-2 py-0.5 rounded text-sm">Goal {goal?.code}</span>
-                      {goal?.title}
+                      <span className="bg-maroon-800 text-white px-2 py-0.5 rounded text-sm shrink-0">Goal {goal?.code}</span>
+                      <span className="truncate">{goal?.title}</span>
                     </h4>
                     
                     <div className="space-y-4">
                       {entries.map(entry => {
-                        const sub = SUB_OBJECTIVES.find(so => so.id === entry.subObjectiveId);
+                        const obj = OBJECTIVES.find(o => o.id === entry.objectiveId);
                         return (
                           <div key={entry.id} className="bg-slate-50 rounded-2xl p-6 border border-slate-100">
                             <div className="flex flex-wrap justify-between items-start gap-4 mb-4">
                               <div className="space-y-1">
-                                <p className="text-xs font-bold text-maroon-800 uppercase tracking-wider">{sub?.code}</p>
-                                <h5 className="font-bold text-slate-800">{sub?.title}</h5>
+                                <p className="text-xs font-bold text-maroon-800 uppercase tracking-wider">{obj?.code}</p>
+                                <h5 className="font-bold text-slate-800">{obj?.title}</h5>
                               </div>
                               <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                                 entry.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' :
