@@ -1,0 +1,7 @@
+{
+  "name": "FMSC Corporate Plan Tracker",
+  "description": "A comprehensive monthly progress reporting web application for the Faculty of Management Studies and Commerce to track and monitor goals against the Corporate Plan.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
