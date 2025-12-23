@@ -137,7 +137,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-maroon-800 focus:border-transparent transition-all outline-none"
-                    placeholder={role === 'ADMIN' ? 'adminfmsc@sjp.ac.lk' : 'hod@sjp.ac.lk'}
+                    placeholder={role === 'ADMIN' ? 'name@domain.com' : 'name@domain.com'}
                   />
                 </div>
               </div>
