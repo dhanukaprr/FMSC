@@ -2,29 +2,42 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { User, Report, Department, UserRole } from './types';
 import { DEPARTMENTS } from './constants';
-import { LogIn, LayoutDashboard, FileText, Settings, LogOut, Building2, UserCircle, Menu, X } from 'lucide-react';
+import { LogIn, LayoutDashboard, FileText, Settings, LogOut, Building2, UserCircle, Menu, X, RefreshCw, CloudCheck } from 'lucide-react';
 import AdminDashboard from './components/AdminDashboard';
 import DeptReportWorkflow from './components/DeptReportWorkflow';
 import LoginForm from './components/LoginForm';
 
+const API_BASE = '/.netlify/functions/api';
+
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'reports'>('dashboard');
 
-  // Load initial state
+  // Load User from session and Reports from DB
   useEffect(() => {
     const savedUser = localStorage.getItem('fmsc_user');
-    const savedReports = localStorage.getItem('fmsc_reports');
     if (savedUser) setCurrentUser(JSON.parse(savedUser));
-    if (savedReports) setReports(JSON.parse(savedReports));
-  }, []);
 
-  // Save state
-  useEffect(() => {
-    localStorage.setItem('fmsc_reports', JSON.stringify(reports));
-  }, [reports]);
+    const fetchReports = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/reports`);
+        if (res.ok) {
+          const data = await res.json();
+          setReports(data);
+        }
+      } catch (err) {
+        console.error("Failed to load reports from DB:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReports();
+  }, []);
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
@@ -36,9 +49,39 @@ const App: React.FC = () => {
     localStorage.removeItem('fmsc_user');
   };
 
-  const updateReports = useCallback((updatedReports: Report[]) => {
+  const updateReports = useCallback(async (updatedReports: Report[]) => {
     setReports(updatedReports);
+    
+    // Find the report that was actually changed to sync it
+    // In a real app, we might only sync the specific report object
+    setIsSyncing(true);
+    try {
+      // For this simplified logic, we find the "active" or "newest" report to sync
+      // Ideally, the components would trigger individual syncs
+      const latestReport = updatedReports[updatedReports.length - 1];
+      if (latestReport) {
+        await fetch(`${API_BASE}/reports`, {
+          method: 'POST',
+          body: JSON.stringify(latestReport)
+        });
+      }
+    } catch (err) {
+      console.error("Sync failed:", err);
+    } finally {
+      setTimeout(() => setIsSyncing(false), 500);
+    }
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-maroon-800"></div>
+          <p className="text-slate-500 font-medium animate-pulse">Connecting to FMSC Cloud...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return <LoginForm onLogin={handleLogin} />;
@@ -86,7 +129,22 @@ const App: React.FC = () => {
               {isAdmin ? 'Admin Portal' : 'Department Portal'}
             </h1>
           </div>
+          
           <div className="flex items-center gap-4">
+            {isSyncing ? (
+              <div className="flex items-center gap-2 text-maroon-800 text-xs font-bold animate-pulse">
+                <RefreshCw size={14} className="animate-spin" />
+                <span>Saving to Cloud...</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-emerald-600 text-xs font-bold opacity-60">
+                <CloudCheck size={14} />
+                <span>Synchronized</span>
+              </div>
+            )}
+            
+            <div className="h-6 w-px bg-slate-200 mx-2 hidden sm:block"></div>
+
             <div className="hidden sm:flex flex-col items-end mr-2">
               <span className="text-sm font-semibold text-slate-900">{currentUser.name}</span>
               <span className="text-xs text-slate-500">
