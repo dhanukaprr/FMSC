@@ -1,18 +1,23 @@
-
 import { Handler } from '@netlify/functions';
 import { Client } from 'pg';
 
 export const handler: Handler = async (event) => {
-  // Check if DATABASE_URL exists
-  if (!process.env.DATABASE_URL) {
+  // Netlify's Neon integration prefixes variables with NETLIFY_
+  const dbUrl = process.env.DATABASE_URL || process.env.NETLIFY_DATABASE_URL || process.env.NETLIFY_DATABASE_URL_UNPOOLED;
+
+  if (!dbUrl) {
     return { 
       statusCode: 500, 
-      body: JSON.stringify({ error: 'DATABASE_URL environment variable is missing.' }) 
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        error: 'Database connection string is missing.',
+        help: 'We looked for DATABASE_URL, NETLIFY_DATABASE_URL, and NETLIFY_DATABASE_URL_UNPOOLED. Please check your Netlify environment variables.'
+      }) 
     };
   }
 
   const client = new Client({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: dbUrl,
     ssl: { rejectUnauthorized: false }
   });
 
@@ -28,7 +33,7 @@ export const handler: Handler = async (event) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           status: 'ok', 
-          message: 'Connection successful', 
+          message: 'Cloud connection verified.', 
           time: dbRes.rows[0].now 
         })
       };
@@ -92,7 +97,7 @@ export const handler: Handler = async (event) => {
         report.status, 
         report.createdBy, 
         report.submittedAt || null, 
-        report.selected_goals || []
+        report.selectedGoals || []
       ]);
 
       await client.query('DELETE FROM report_entries WHERE report_id = $1', [report.id]);
@@ -131,7 +136,10 @@ export const handler: Handler = async (event) => {
     return { 
       statusCode: 500, 
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ error: err.message, detail: "Ensure tables exist in Neon." }) 
+      body: JSON.stringify({ 
+        error: err.message, 
+        detail: "Check database tables and connection strings." 
+      }) 
     };
   } finally {
     await client.end();
