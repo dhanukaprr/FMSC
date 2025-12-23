@@ -86,7 +86,7 @@ export const handler: Handler = async (event) => {
           status = EXCLUDED.status,
           submitted_at = EXCLUDED.submitted_at,
           selected_goals = EXCLUDED.selected_goals
-      `, [report.id, report.departmentId, report.period, report.status, report.createdBy, report.submittedAt || null, report.selectedGoals || []]);
+      `, [report.id, report.departmentId, report.period, report.status, report.createdBy, report.submittedAt || null, JSON.stringify(report.selectedGoals || [])]);
 
       await client.query('DELETE FROM report_entries WHERE report_id = $1', [report.id]);
       

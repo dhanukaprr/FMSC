@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { Lock, Mail, Building2, ChevronRight, User as UserIcon } from 'lucide-react';
+import { Lock, Mail, Building2, ChevronRight, User as UserIcon, AlertCircle } from 'lucide-react';
 import { DEPARTMENTS } from '../constants';
 
 interface LoginFormProps {
@@ -13,18 +13,41 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('DEPT_USER');
   const [departmentId, setDepartmentId] = useState(DEPARTMENTS[0].id);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate auth
-    const user: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: role === 'ADMIN' ? 'Dean Office Admin' : `HoD of ${DEPARTMENTS.find(d => d.id === departmentId)?.name}`,
-      email,
-      role,
-      departmentId: role === 'DEPT_USER' ? departmentId : undefined
-    };
-    onLogin(user);
+    setError(null);
+
+    // Hardcoded credentials as requested
+    const ADMIN_EMAIL = 'adminfmsc@sjp.ac.lk';
+    const DEPT_EMAIL = 'hod@sjp.ac.lk';
+    const COMMON_PASSWORD = 'admin121212';
+
+    let isValid = false;
+
+    if (role === 'ADMIN') {
+      if (email === ADMIN_EMAIL && password === COMMON_PASSWORD) {
+        isValid = true;
+      }
+    } else {
+      if (email === DEPT_EMAIL && password === COMMON_PASSWORD) {
+        isValid = true;
+      }
+    }
+
+    if (isValid) {
+      const user: User = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: role === 'ADMIN' ? 'Dean Office Admin' : `HoD of ${DEPARTMENTS.find(d => d.id === departmentId)?.name}`,
+        email,
+        role,
+        departmentId: role === 'DEPT_USER' ? departmentId : undefined
+      };
+      onLogin(user);
+    } else {
+      setError('Invalid username or password. Please check your credentials and try again.');
+    }
   };
 
   return (
@@ -76,7 +99,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
             <div className="flex gap-4 p-1 bg-slate-100 rounded-xl">
               <button 
                 type="button"
-                onClick={() => setRole('DEPT_USER')}
+                onClick={() => { setRole('DEPT_USER'); setError(null); }}
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold transition-all ${
                   role === 'DEPT_USER' ? 'bg-white text-maroon-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
                 }`}
@@ -86,7 +109,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
               </button>
               <button 
                 type="button"
-                onClick={() => setRole('ADMIN')}
+                onClick={() => { setRole('ADMIN'); setError(null); }}
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold transition-all ${
                   role === 'ADMIN' ? 'bg-white text-maroon-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
                 }`}
@@ -95,6 +118,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
                 Admin
               </button>
             </div>
+
+            {error && (
+              <div className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-100 rounded-xl text-rose-600 animate-in fade-in slide-in-from-top-2">
+                <AlertCircle size={20} className="shrink-0" />
+                <p className="text-sm font-medium">{error}</p>
+              </div>
+            )}
 
             <div className="space-y-4">
               <div>
@@ -107,7 +137,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-maroon-800 focus:border-transparent transition-all outline-none"
-                    placeholder="name@university.ac.lk"
+                    placeholder={role === 'ADMIN' ? 'adminfmsc@sjp.ac.lk' : 'hod@sjp.ac.lk'}
                   />
                 </div>
               </div>
@@ -129,11 +159,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
 
               {role === 'DEPT_USER' && (
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Select Department</label>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">Select Your Department</label>
                   <select 
                     value={departmentId}
                     onChange={(e) => setDepartmentId(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-maroon-800 transition-all outline-none"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-maroon-800 transition-all outline-none appearance-none"
                   >
                     {DEPARTMENTS.map(d => (
                       <option key={d.id} value={d.id}>{d.name}</option>

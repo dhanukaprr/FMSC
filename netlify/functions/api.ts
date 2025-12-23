@@ -2,7 +2,7 @@ import { Handler } from '@netlify/functions';
 import { Client } from 'pg';
 
 export const handler: Handler = async (event) => {
-  // Priority order for environment variables
+  // Use the specific environment variables provided by Netlify's Neon integration
   const dbUrl = 
     process.env.NETLIFY_DATABASE_URL || 
     process.env.NETLIFY_DATABASE_URL_UNPOOLED || 
@@ -27,10 +27,9 @@ export const handler: Handler = async (event) => {
       body: JSON.stringify({ 
         error: 'Database connection string is missing.',
         debug: {
-          checked: ['NETLIFY_DATABASE_URL', 'NETLIFY_DATABASE_URL_UNPOOLED', 'DATABASE_URL'],
-          foundKeys: Object.keys(process.env).filter(k => k.includes('DATABASE') || k.includes('URL'))
+          checked: ['NETLIFY_DATABASE_URL', 'NETLIFY_DATABASE_URL_UNPOOLED', 'DATABASE_URL']
         },
-        help: 'Ensure your Neon integration is connected or manually set NETLIFY_DATABASE_URL in Netlify Site Settings.'
+        help: 'Ensure your Neon integration is connected in Netlify or manually set NETLIFY_DATABASE_URL.'
       }) 
     };
   }
@@ -53,7 +52,7 @@ export const handler: Handler = async (event) => {
         body: JSON.stringify({ 
           status: 'ok', 
           message: 'Connected to Neon successfully.',
-          source: process.env.NETLIFY_DATABASE_URL ? 'NETLIFY_DATABASE_URL' : 'Fallback URL',
+          source: process.env.NETLIFY_DATABASE_URL ? 'NETLIFY_DATABASE_URL' : (process.env.NETLIFY_DATABASE_URL_UNPOOLED ? 'NETLIFY_DATABASE_URL_UNPOOLED' : 'DATABASE_URL'),
           time: dbRes.rows[0].now 
         })
       };
@@ -103,6 +102,7 @@ export const handler: Handler = async (event) => {
         return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing report ID' }) };
       }
 
+      // Upsert report
       await client.query(`
         INSERT INTO reports (id, department_id, period, status, created_by, submitted_at, selected_goals)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -117,9 +117,10 @@ export const handler: Handler = async (event) => {
         report.status, 
         report.createdBy, 
         report.submittedAt || null, 
-        report.selectedGoals || []
+        JSON.stringify(report.selectedGoals || [])
       ]);
 
+      // Refresh entries for this report
       await client.query('DELETE FROM report_entries WHERE report_id = $1', [report.id]);
       
       if (report.entries && report.entries.length > 0) {
@@ -158,7 +159,7 @@ export const handler: Handler = async (event) => {
       headers,
       body: JSON.stringify({ 
         error: err.message,
-        hint: "Ensure the SQL schema has been applied in the Neon console."
+        hint: "Ensure the SQL schema has been applied in the Neon console. Specifically check if selected_goals column exists and is of type jsonb or text."
       }) 
     };
   } finally {
