@@ -2,43 +2,56 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { User, Report, Department, UserRole } from './types';
 import { DEPARTMENTS } from './constants';
-import { LogIn, LayoutDashboard, FileText, Settings, LogOut, Building2, UserCircle, Menu, X, RefreshCw, CloudCheck, AlertTriangle } from 'lucide-react';
+import { LogIn, LayoutDashboard, FileText, Settings, LogOut, Building2, UserCircle, Menu, X, RefreshCw, CloudCheck, AlertTriangle, CloudOff } from 'lucide-react';
 import AdminDashboard from './components/AdminDashboard';
 import DeptReportWorkflow from './components/DeptReportWorkflow';
 import LoginForm from './components/LoginForm';
 
+// Netlify Function Path
 const API_BASE = '/.netlify/functions/api';
+const LOCAL_STORAGE_KEY = 'fmsc_reports_data';
 
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'reports'>('dashboard');
 
-  // Load User from session and Reports from DB
+  // Load Initial Data
   useEffect(() => {
+    // 1. Load User
     const savedUser = localStorage.getItem('fmsc_user');
     if (savedUser) setCurrentUser(JSON.parse(savedUser));
 
+    // 2. Load Reports (Local first for immediate UI responsiveness)
+    const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (localData) {
+      setReports(JSON.parse(localData));
+    }
+
+    // 3. Sync from Cloud
     const fetchReports = async () => {
       try {
         const res = await fetch(API_BASE);
         if (res.ok) {
-          const data = await res.json();
-          setReports(data || []);
-        } else {
-          const errorText = await res.text();
-          console.error("API Error:", res.status, errorText);
-          if (res.status === 404) {
-            setSyncError("API not found. Ensure Netlify Functions are running.");
+          const cloudData = await res.json();
+          if (cloudData && cloudData.length > 0) {
+            setReports(cloudData);
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cloudData));
           }
+          setIsOffline(false);
+        } else if (res.status === 404) {
+          // If 404, we are likely not in a Netlify environment
+          console.warn("Netlify Functions not found. Running in Local-Only mode.");
+          setIsOffline(true);
         }
       } catch (err) {
-        console.error("Connection error. Ensure 'netlify dev' is running locally:", err);
-        setSyncError("Cloud connection failed.");
+        console.warn("Cloud sync failed. Using local storage.");
+        setIsOffline(true);
       } finally {
         setIsLoading(false);
       }
@@ -58,14 +71,18 @@ const App: React.FC = () => {
   };
 
   const updateReports = useCallback(async (updatedReports: Report[]) => {
+    // Immediate Update
+    setReports(updatedReports);
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedReports));
+
+    // Determine which report changed
     const modifiedReport = updatedReports.find((updated) => {
       const original = reports.find(r => r.id === updated.id);
       return !original || JSON.stringify(original) !== JSON.stringify(updated);
     });
-
-    setReports(updatedReports);
     
-    if (modifiedReport) {
+    // Background Sync
+    if (modifiedReport && !isOffline) {
       setIsSyncing(true);
       setSyncError(null);
       try {
@@ -75,24 +92,22 @@ const App: React.FC = () => {
           body: JSON.stringify(modifiedReport)
         });
 
-        if (!response.ok) {
-          throw new Error(await response.text());
-        }
+        if (!response.ok) throw new Error("Sync failed");
       } catch (err: any) {
-        console.error("Sync failed:", err);
-        setSyncError("Save failed. Connection error.");
+        console.error("Cloud save failed:", err);
+        setSyncError("Cloud save pending...");
       } finally {
-        setTimeout(() => setIsSyncing(false), 500);
+        setTimeout(() => setIsSyncing(false), 800);
       }
     }
-  }, [reports]);
+  }, [reports, isOffline]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-maroon-800"></div>
-          <p className="text-slate-500 font-medium animate-pulse">Connecting to FMSC Cloud...</p>
+          <p className="text-slate-500 font-medium animate-pulse text-sm">Initializing Tracker...</p>
         </div>
       </div>
     );
@@ -106,9 +121,10 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex bg-slate-50">
+      {/* Mobile Sidebar Backdrop */}
       <div className={`fixed inset-0 z-50 lg:hidden ${isSidebarOpen ? 'block' : 'hidden'}`}>
         <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
-        <div className="absolute top-0 left-0 h-full w-64 bg-white shadow-xl flex flex-col">
+        <div className="absolute top-0 left-0 h-full w-72 bg-white shadow-xl flex flex-col">
           <SidebarContent 
             user={currentUser} 
             activeTab={activeTab} 
@@ -119,7 +135,8 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      <aside className="hidden lg:flex w-64 flex-col bg-white border-r border-slate-200 sticky top-0 h-screen">
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:flex w-72 flex-col bg-white border-r border-slate-200 sticky top-0 h-screen shadow-sm">
         <SidebarContent 
           user={currentUser} 
           activeTab={activeTab} 
@@ -128,47 +145,59 @@ const App: React.FC = () => {
         />
       </aside>
 
+      {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0">
         <header className="h-16 bg-white border-b border-slate-200 px-4 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsSidebarOpen(true)}
-              className="p-2 lg:hidden text-slate-500 hover:bg-slate-100 rounded-md"
+              className="p-2 lg:hidden text-slate-500 hover:bg-slate-100 rounded-md transition-colors"
             >
               <Menu size={20} />
             </button>
-            <h1 className="font-bold text-slate-800 text-lg lg:text-xl truncate">
-              {isAdmin ? 'Admin Portal' : 'Department Portal'}
+            <h1 className="font-bold text-slate-800 text-lg lg:text-xl truncate tracking-tight">
+              {isAdmin ? 'Admin Control' : 'Department Portal'}
             </h1>
           </div>
           
-          <div className="flex items-center gap-4">
-            {isSyncing ? (
-              <div className="flex items-center gap-2 text-maroon-800 text-xs font-bold animate-pulse">
-                <RefreshCw size={14} className="animate-spin" />
-                <span>Saving...</span>
-              </div>
-            ) : syncError ? (
-              <div className="flex items-center gap-2 text-rose-600 text-xs font-bold">
-                <AlertTriangle size={14} />
-                <span className="hidden sm:inline">{syncError}</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 text-emerald-600 text-xs font-bold opacity-60">
-                <CloudCheck size={14} />
-                <span>Sync Active</span>
-              </div>
-            )}
-            
-            <div className="h-6 w-px bg-slate-200 mx-2 hidden sm:block"></div>
-
-            <div className="hidden sm:flex flex-col items-end mr-2">
-              <span className="text-sm font-semibold text-slate-900">{currentUser.name}</span>
-              <span className="text-xs text-slate-500">
-                {isAdmin ? 'Faculty Office' : DEPARTMENTS.find(d => d.id === currentUser.departmentId)?.name || 'Department'}
-              </span>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="hidden sm:block">
+              {isSyncing ? (
+                <div className="flex items-center gap-2 text-maroon-800 text-[10px] font-bold animate-pulse px-3 py-1 bg-maroon-50 rounded-full">
+                  <RefreshCw size={12} className="animate-spin" />
+                  <span>SYNCING...</span>
+                </div>
+              ) : isOffline ? (
+                <div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold px-3 py-1 bg-slate-100 rounded-full border border-slate-200">
+                  <CloudOff size={12} />
+                  <span>LOCAL MODE</span>
+                </div>
+              ) : syncError ? (
+                <div className="flex items-center gap-2 text-rose-600 text-[10px] font-bold px-3 py-1 bg-rose-50 rounded-full border border-rose-100">
+                  <AlertTriangle size={12} />
+                  <span>{syncError}</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-emerald-600 text-[10px] font-bold px-3 py-1 bg-emerald-50 rounded-full">
+                  <CloudCheck size={12} />
+                  <span>CLOUD SYNCED</span>
+                </div>
+              )}
             </div>
-            <UserCircle className="text-slate-400" size={32} />
+            
+            <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block"></div>
+
+            <div className="flex items-center gap-3 pl-2">
+              <div className="hidden md:flex flex-col items-end">
+                <span className="text-sm font-bold text-slate-900 leading-none mb-1">{currentUser.name}</span>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                  {isAdmin ? 'Dean Office' : DEPARTMENTS.find(d => d.id === currentUser.departmentId)?.name}
+                </span>
+              </div>
+              <div className="h-10 w-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+                <UserCircle size={28} />
+              </div>
+            </div>
           </div>
         </header>
 
@@ -189,8 +218,11 @@ const App: React.FC = () => {
             )
           ) : (
             <div className="bg-white p-12 rounded-2xl shadow-sm border border-slate-200 text-center text-slate-400">
-              <FileText size={48} className="mx-auto mb-4 opacity-20" />
-              <p>Historical Reports view coming soon...</p>
+              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FileText size={40} className="opacity-20" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-800 mb-2">Historical Records</h2>
+              <p className="max-w-xs mx-auto">This module is currently under development. You will soon be able to view and export past reporting cycles.</p>
             </div>
           )}
         </div>
@@ -210,51 +242,60 @@ interface SidebarProps {
 const SidebarContent: React.FC<SidebarProps> = ({ user, activeTab, setActiveTab, onLogout, onClose }) => {
   return (
     <>
-      <div className="p-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="bg-maroon-800 p-2 rounded-lg">
+      <div className="p-8 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="bg-maroon-800 p-2.5 rounded-xl shadow-lg shadow-maroon-100">
             <Building2 className="text-white" size={24} />
           </div>
-          <span className="font-bold text-xl text-slate-900 tracking-tight">FMSC Tracker</span>
+          <div className="flex flex-col">
+            <span className="font-black text-xl text-slate-900 tracking-tight leading-none">FMSC</span>
+            <span className="text-[10px] font-bold text-maroon-800 uppercase tracking-[0.2em] mt-1">Tracker</span>
+          </div>
         </div>
         {onClose && (
-          <button onClick={onClose} className="text-slate-400 p-1 hover:text-slate-600">
+          <button onClick={onClose} className="text-slate-400 p-2 hover:bg-slate-50 rounded-lg transition-colors">
             <X size={20} />
           </button>
         )}
       </div>
 
-      <nav className="flex-1 px-4 space-y-1">
+      <nav className="flex-1 px-4 space-y-1.5">
         <SidebarLink 
           icon={<LayoutDashboard size={20} />} 
-          label="Dashboard" 
+          label="Active Dashboard" 
           active={activeTab === 'dashboard'} 
           onClick={() => { setActiveTab('dashboard'); onClose?.(); }} 
         />
         <SidebarLink 
           icon={<FileText size={20} />} 
-          label="Reports" 
+          label="Past Reports" 
           active={activeTab === 'reports'} 
           onClick={() => { setActiveTab('reports'); onClose?.(); }} 
         />
-        <div className="pt-4 mt-4 border-t border-slate-100">
-          <p className="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Management</p>
-          <SidebarLink 
-            icon={<Settings size={20} />} 
-            label="Settings" 
-            active={false} 
-            onClick={() => { onClose?.(); }} 
-          />
+        
+        <div className="pt-8 px-4 pb-2">
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">FACULTY MANAGEMENT</p>
         </div>
+        
+        <SidebarLink 
+          icon={<Settings size={20} />} 
+          label="User Settings" 
+          active={false} 
+          onClick={() => { onClose?.(); }} 
+        />
       </nav>
 
-      <div className="p-4 border-t border-slate-100">
+      <div className="p-6">
+        <div className="bg-slate-50 rounded-2xl p-4 mb-4 border border-slate-100">
+           <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Internal Support</p>
+           <p className="text-xs text-slate-600 leading-relaxed">Having issues? Contact the Dean's Office IT Desk for assistance.</p>
+        </div>
         <button 
           onClick={onLogout}
-          className="w-full flex items-center gap-3 px-4 py-2 text-slate-600 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-colors group"
+          className="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-rose-50 hover:text-rose-600 rounded-xl transition-all group border border-transparent hover:border-rose-100"
         >
-          <LogOut size={20} className="group-hover:translate-x-1 transition-transform" />
-          <span className="font-medium">Logout</span>
+          <LogOut size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+          <span className="font-bold">Sign Out</span>
         </button>
       </div>
     </>
@@ -264,16 +305,16 @@ const SidebarContent: React.FC<SidebarProps> = ({ user, activeTab, setActiveTab,
 const SidebarLink: React.FC<{ icon: React.ReactNode; label: string; active: boolean; onClick: () => void }> = ({ icon, label, active, onClick }) => (
   <button 
     onClick={onClick}
-    className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ${
+    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
       active 
-        ? 'bg-maroon-50 text-maroon-800 shadow-sm' 
+        ? 'bg-maroon-800 text-white shadow-lg shadow-maroon-100 translate-x-1' 
         : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
     }`}
   >
-    <div className={active ? 'text-maroon-800' : 'text-slate-400'}>
+    <div className={active ? 'text-white' : 'text-slate-400'}>
       {icon}
     </div>
-    <span className="font-semibold">{label}</span>
+    <span className="font-bold">{label}</span>
   </button>
 );
 
