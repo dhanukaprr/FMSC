@@ -23,7 +23,7 @@ const PastReports: React.FC<Props> = ({ reports, user }) => {
       const matchesDept = filterDept === 'all' || r.departmentId === filterDept;
       const matchesYear = filterYear === 'all' || r.period.startsWith(filterYear);
       const isAuthorized = isAdmin || r.departmentId === user.departmentId;
-      
+
       return matchesSearch && matchesDept && matchesYear && isAuthorized;
     }).sort((a, b) => b.period.localeCompare(a.period));
   }, [reports, searchTerm, filterDept, filterYear, user, isAdmin]);
@@ -45,7 +45,7 @@ const PastReports: React.FC<Props> = ({ reports, user }) => {
           <p className="text-slate-500">Access and review all past monthly submissions and drafts.</p>
         </div>
         <div className="flex items-center gap-2">
-          <button 
+          <button
             className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-all text-sm"
             onClick={() => alert('Exporting archive to CSV...')}
           >
@@ -58,8 +58,8 @@ const PastReports: React.FC<Props> = ({ reports, user }) => {
       <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-4">
         <div className="flex-1 min-w-[200px] relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Search by period (YYYY-MM)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -70,7 +70,7 @@ const PastReports: React.FC<Props> = ({ reports, user }) => {
         {isAdmin && (
           <div className="relative">
             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <select 
+            <select
               value={filterDept}
               onChange={(e) => setFilterDept(e.target.value)}
               className="pl-10 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-maroon-800 outline-none appearance-none"
@@ -83,7 +83,7 @@ const PastReports: React.FC<Props> = ({ reports, user }) => {
 
         <div className="relative">
           <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-          <select 
+          <select
             value={filterYear}
             onChange={(e) => setFilterYear(e.target.value)}
             className="pl-10 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-maroon-800 outline-none appearance-none"
@@ -97,7 +97,7 @@ const PastReports: React.FC<Props> = ({ reports, user }) => {
       {filteredReports.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredReports.map(report => (
-            <div 
+            <div
               key={report.id}
               className="bg-white p-6 rounded-2xl border border-slate-200 hover:border-maroon-300 hover:shadow-lg transition-all group"
             >
@@ -105,18 +105,17 @@ const PastReports: React.FC<Props> = ({ reports, user }) => {
                 <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-maroon-50 group-hover:text-maroon-800 transition-colors">
                   <FileText size={24} />
                 </div>
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                  report.status === 'SUBMITTED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                }`}>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${report.status === 'SUBMITTED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                  }`}>
                   {report.status}
                 </span>
               </div>
-              
+
               <h3 className="text-xl font-bold text-slate-900 mb-1">{report.period}</h3>
               <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-4">
                 {DEPARTMENTS.find(d => d.id === report.departmentId)?.name}
               </p>
-              
+
               <div className="flex items-center gap-4 py-4 border-y border-slate-50 mb-6">
                 <div className="text-center flex-1">
                   <p className="text-xs font-bold text-slate-400 uppercase">Goals</p>
@@ -129,7 +128,7 @@ const PastReports: React.FC<Props> = ({ reports, user }) => {
                 </div>
               </div>
 
-              <button 
+              <button
                 onClick={() => setViewingReportId(report.id)}
                 className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-50 text-slate-600 font-bold rounded-xl group-hover:bg-maroon-800 group-hover:text-white transition-all shadow-sm"
               >
@@ -167,13 +166,13 @@ const PastReports: React.FC<Props> = ({ reports, user }) => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <button 
+                <button
                   onClick={() => alert('Printing record...')}
                   className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
                 >
                   <Download size={20} />
                 </button>
-                <button 
+                <button
                   onClick={() => setViewingReportId(null)}
                   className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
                 >
@@ -186,9 +185,8 @@ const PastReports: React.FC<Props> = ({ reports, user }) => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
                 <div>
                   <p className="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">Submission Status</p>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                    viewingReport.status === 'SUBMITTED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                  }`}>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${viewingReport.status === 'SUBMITTED' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                    }`}>
                     {viewingReport.status}
                   </span>
                 </div>
@@ -215,7 +213,7 @@ const PastReports: React.FC<Props> = ({ reports, user }) => {
                       <span className="bg-maroon-800 text-white px-2 py-0.5 rounded text-sm shrink-0">Goal {goal?.code}</span>
                       <span className="truncate">{goal?.title}</span>
                     </h4>
-                    
+
                     <div className="space-y-4">
                       {entries.map(entry => {
                         const obj = OBJECTIVES.find(o => o.id === entry.objectiveId);
@@ -226,18 +224,17 @@ const PastReports: React.FC<Props> = ({ reports, user }) => {
                                 <p className="text-xs font-bold text-maroon-800 uppercase tracking-wider">{obj?.code}</p>
                                 <h5 className="font-bold text-slate-800">{obj?.title}</h5>
                               </div>
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                                entry.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' :
-                                entry.status === 'Delayed' ? 'bg-rose-100 text-rose-700' :
-                                'bg-maroon-100 text-maroon-800'
-                              }`}>
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${entry.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' :
+                                  entry.status === 'Delayed' ? 'bg-rose-100 text-rose-700' :
+                                    'bg-maroon-100 text-maroon-800'
+                                }`}>
                                 {entry.status}
                               </span>
                             </div>
-                            
+
                             <div className="space-y-4">
                               <p className="text-slate-600 text-sm italic">"{entry.narrative || 'N/A'}"</p>
-                              
+
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-100/50">
                                 <div>
                                   <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Metrics</p>
@@ -255,7 +252,7 @@ const PastReports: React.FC<Props> = ({ reports, user }) => {
                                   <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Evidence</p>
                                   {entry.evidenceUrl ? (
                                     <a href={entry.evidenceUrl} target="_blank" rel="noreferrer" className="text-sm text-maroon-800 font-bold hover:underline inline-flex items-center gap-1">
-                                      Link <ExternalLink size={12} />
+                                      {entry.evidenceUrl.startsWith('data:') ? 'View File' : 'View Link'} <ExternalLink size={12} />
                                     </a>
                                   ) : (
                                     <p className="text-sm text-slate-300 italic">None</p>

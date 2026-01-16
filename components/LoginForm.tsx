@@ -11,7 +11,7 @@ interface LoginFormProps {
 const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('DEPT_USER');
+  const [role, setRole] = useState<UserRole>('HOD'); // Default to HOD
   const [departmentId, setDepartmentId] = useState(DEPARTMENTS[0].id);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,7 +21,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
 
     // Hardcoded credentials as requested
     const ADMIN_EMAIL = 'adminfmsc@sjp.ac.lk';
-    const DEPT_EMAIL = 'hod@sjp.ac.lk';
+    const HOD_EMAIL = 'hod@sjp.ac.lk';
+    const LECTURER_EMAIL = 'lecturer@sjp.ac.lk';
     const COMMON_PASSWORD = 'admin121212';
 
     let isValid = false;
@@ -30,8 +31,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
       if (email === ADMIN_EMAIL && password === COMMON_PASSWORD) {
         isValid = true;
       }
-    } else {
-      if (email === DEPT_EMAIL && password === COMMON_PASSWORD) {
+    } else if (role === 'HOD') {
+      if (email === HOD_EMAIL && password === COMMON_PASSWORD) {
+        isValid = true;
+      }
+    } else if (role === 'LECTURER') {
+      if (email === LECTURER_EMAIL && password === COMMON_PASSWORD) {
         isValid = true;
       }
     }
@@ -39,10 +44,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
     if (isValid) {
       const user: User = {
         id: Math.random().toString(36).substr(2, 9),
-        name: role === 'ADMIN' ? 'Dean Office Admin' : `HoD of ${DEPARTMENTS.find(d => d.id === departmentId)?.name}`,
+        name: role === 'ADMIN' ? 'Dean Office Admin' :
+          role === 'HOD' ? `HoD of ${DEPARTMENTS.find(d => d.id === departmentId)?.name}` :
+            `Lecturer (${DEPARTMENTS.find(d => d.id === departmentId)?.name})`,
         email,
         role,
-        departmentId: role === 'DEPT_USER' ? departmentId : undefined
+        departmentId: role !== 'ADMIN' ? departmentId : undefined
       };
       onLogin(user);
     } else {
@@ -66,7 +73,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
           <div className="bg-white/10 w-16 h-16 rounded-2xl flex items-center justify-center mb-8 backdrop-blur-md">
             <Building2 size={32} />
           </div>
-          <h1 className="text-5xl font-bold mb-6 leading-tight">Corporate Plan <br/>Progress Tracker</h1>
+          <h1 className="text-5xl font-bold mb-6 leading-tight">Corporate Plan <br />Progress Tracker</h1>
           <p className="text-xl text-maroon-50 max-w-md">
             Streamlining strategic reporting and accountability for the Faculty of Management Studies and Commerce.
           </p>
@@ -96,25 +103,29 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="flex gap-4 p-1 bg-slate-100 rounded-xl">
-              <button 
+            <div className="flex gap-2 p-1 bg-slate-100 rounded-xl">
+              <button
                 type="button"
-                onClick={() => { setRole('DEPT_USER'); setError(null); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold transition-all ${
-                  role === 'DEPT_USER' ? 'bg-white text-maroon-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                }`}
+                onClick={() => { setRole('LECTURER'); setError(null); }}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold transition-all ${role === 'LECTURER' ? 'bg-white text-maroon-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  }`}
               >
-                <Building2 size={18} />
-                Department
+                Lecturer
               </button>
-              <button 
+              <button
+                type="button"
+                onClick={() => { setRole('HOD'); setError(null); }}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold transition-all ${role === 'HOD' ? 'bg-white text-maroon-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+              >
+                HoD
+              </button>
+              <button
                 type="button"
                 onClick={() => { setRole('ADMIN'); setError(null); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-semibold transition-all ${
-                  role === 'ADMIN' ? 'bg-white text-maroon-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
-                }`}
+                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold transition-all ${role === 'ADMIN' ? 'bg-white text-maroon-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  }`}
               >
-                <UserIcon size={18} />
                 Admin
               </button>
             </div>
@@ -131,9 +142,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email Address</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input 
-                    type="email" 
-                    required 
+                  <input
+                    type="email"
+                    required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-maroon-800 focus:border-transparent transition-all outline-none"
@@ -146,9 +157,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
                 <label className="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input 
-                    type="password" 
-                    required 
+                  <input
+                    type="password"
+                    required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-maroon-800 focus:border-transparent transition-all outline-none"
@@ -157,10 +168,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
                 </div>
               </div>
 
-              {role === 'DEPT_USER' && (
+              {role !== 'ADMIN' && (
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">Select Your Department</label>
-                  <select 
+                  <select
                     value={departmentId}
                     onChange={(e) => setDepartmentId(e.target.value)}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-maroon-800 transition-all outline-none appearance-none"
@@ -181,7 +192,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin }) => {
               <button type="button" className="text-sm font-semibold text-maroon-800 hover:text-maroon-900">Forgot password?</button>
             </div>
 
-            <button 
+            <button
               type="submit"
               className="w-full py-3.5 bg-maroon-800 hover:bg-maroon-900 text-white font-bold rounded-xl shadow-lg shadow-maroon-100 transition-all active:scale-[0.98]"
             >

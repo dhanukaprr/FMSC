@@ -1,5 +1,5 @@
 
-export type UserRole = 'ADMIN' | 'DEPT_USER';
+export type UserRole = 'ADMIN' | 'HOD' | 'LECTURER';
 
 export interface User {
   id: string;
@@ -27,7 +27,7 @@ export interface Objective {
   title: string;
 }
 
-export type ReportStatus = 'DRAFT' | 'SUBMITTED' | 'REVISION_REQUESTED';
+export type ReportStatus = 'DRAFT' | 'SUBMITTED' | 'REVISION_REQUESTED' | 'ACCEPTED';
 
 export type EntryStatus = 'Not started' | 'In progress' | 'Completed' | 'Delayed';
 
@@ -42,6 +42,9 @@ export interface ReportEntry {
   supportNeeded?: string;
   evidenceUrl?: string;
   createdAt: string;
+  submittedBy: string;
+  submittedByName: string;
+  isApprovedByHOD: boolean;
 }
 
 export interface Report {

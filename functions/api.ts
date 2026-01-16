@@ -2,9 +2,9 @@ import { Handler } from '@netlify/functions';
 import { Client } from 'pg';
 
 export const handler: Handler = async (event) => {
-  const dbUrl = 
-    process.env.NETLIFY_DATABASE_URL || 
-    process.env.NETLIFY_DATABASE_URL_UNPOOLED || 
+  const dbUrl =
+    process.env.NETLIFY_DATABASE_URL ||
+    process.env.NETLIFY_DATABASE_URL_UNPOOLED ||
     process.env.DATABASE_URL;
 
   const headers = {
@@ -19,10 +19,10 @@ export const handler: Handler = async (event) => {
   }
 
   if (!dbUrl) {
-    return { 
-      statusCode: 500, 
+    return {
+      statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Database connection string is missing.' }) 
+      body: JSON.stringify({ error: 'Database connection string is missing.' })
     };
   }
 
@@ -47,7 +47,7 @@ export const handler: Handler = async (event) => {
     if (httpMethod === 'GET') {
       const reportsRes = await client.query('SELECT * FROM reports ORDER BY period DESC');
       const entriesRes = await client.query('SELECT * FROM report_entries');
-      
+
       const reports = reportsRes.rows.map(r => ({
         id: r.id,
         period: r.period,
@@ -68,10 +68,13 @@ export const handler: Handler = async (event) => {
             challenges: e.challenges,
             supportNeeded: e.support_needed,
             evidenceUrl: e.evidence_url,
-            createdAt: e.created_at
+            createdAt: e.created_at,
+            submittedBy: e.submitted_by,
+            submittedByName: e.submitted_by_name,
+            isApprovedByHOD: e.is_approved_by_hod
           }))
       }));
-      
+
       return { statusCode: 200, headers, body: JSON.stringify(reports) };
     }
 
@@ -89,13 +92,13 @@ export const handler: Handler = async (event) => {
       `, [report.id, report.departmentId, report.period, report.status, report.createdBy, report.submittedAt || null, JSON.stringify(report.selectedGoals || [])]);
 
       await client.query('DELETE FROM report_entries WHERE report_id = $1', [report.id]);
-      
+
       if (report.entries && report.entries.length > 0) {
         for (const entry of report.entries) {
           await client.query(`
-            INSERT INTO report_entries (id, report_id, objective_id, status, narrative, metrics, challenges, support_needed, evidence_url)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-          `, [entry.id, report.id, entry.objectiveId, entry.status, entry.narrative || null, entry.metrics || null, entry.challenges || null, entry.supportNeeded || null, entry.evidenceUrl || null]);
+            INSERT INTO report_entries (id, report_id, objective_id, status, narrative, metrics, challenges, support_needed, evidence_url, submitted_by, submitted_by_name, is_approved_by_hod)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          `, [entry.id, report.id, entry.objectiveId, entry.status, entry.narrative || null, entry.metrics || null, entry.challenges || null, entry.supportNeeded || null, entry.evidenceUrl || null, entry.submittedBy || null, entry.submittedByName || null, entry.isApprovedByHOD || false]);
         }
       }
 

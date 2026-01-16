@@ -7,7 +7,15 @@ export default defineConfig(({ mode }) => {
     return {
       server: {
         port: 3000,
+        strictPort: true,
         host: '0.0.0.0',
+        proxy: {
+          '/.netlify/functions': {
+            target: 'http://localhost:8888',
+            changeOrigin: true,
+            rewrite: (path) => path.replace(/^\/\.netlify\/functions/, '/.netlify/functions')
+          }
+        }
       },
       plugins: [react()],
       define: {
